@@ -2,11 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
 <title>入寮管理システム</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
@@ -15,58 +14,28 @@
 <style>
 *{box-sizing:border-box;font-family:'Nunito',system-ui;margin:0;padding:0;}
 body{
-  background:radial-gradient(circle at top,#0f172a,#020617);
+  background:
+    radial-gradient(circle at top,#0f172a,#020617),
+    linear-gradient(120deg,#0a0a1f,#001122);
   color:white;
-  padding-bottom:320px;
+  padding-bottom:340px;
 }
-
-/* Glass UI */
 .glass{
   background:rgba(255,255,255,0.12);
-  backdrop-filter:blur(20px);
-  border-radius:20px;
-  border:1px solid rgba(255,255,255,0.15);
-  box-shadow:0 20px 50px rgba(0,0,0,.4);
+  backdrop-filter:blur(24px);
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,0.18);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
 }
+header{padding:16px;text-align:center;font-size:22px;font-weight:900;letter-spacing:1px;}
 
-header{
-  padding:16px;
-  text-align:center;
-  font-size:20px;
-  font-weight:bold;
-  letter-spacing:.5px;
-}
+.monthSelect{margin:10px;padding:12px;text-align:center;}
+.monthSelect input{padding:10px 18px;border-radius:14px;border:none;font-size:16px;background:rgba(255,255,255,0.15);color:white;}
 
-/* Month selector */
-.monthSelect{
-  margin:10px;
-  padding:12px;
-  text-align:center;
-}
-.monthSelect input{
-  padding:8px 14px;
-  border-radius:12px;
-  border:none;
-  font-size:16px;
-}
-
-/* Grid */
 .wrapper{padding:10px;}
 .scroll{overflow:auto;max-height:70vh;position:relative;}
-.grid{
-  display:grid;
-  grid-template-columns:60px repeat(10,80px);
-  grid-auto-rows:28px;
-  min-width:860px;
-}
-.grid div{
-  height:28px;
-  line-height:28px;
-  font-size:12px;
-  text-align:center;
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  border-right:1px solid rgba(255,255,255,0.08);
-}
+.grid{display:grid;grid-template-columns:60px repeat(10,80px);grid-auto-rows:28px;min-width:860px;}
+.grid div{height:28px;line-height:28px;font-size:12px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.08);border-right:1px solid rgba(255,255,255,0.08);}
 .date{background:rgba(255,255,255,0.12);font-weight:bold;}
 .dateSpan{grid-row:span 2;height:56px;line-height:56px;}
 .sticky-top{position:sticky;top:0;z-index:5;background:rgba(0,0,0,0.7);}
@@ -74,99 +43,32 @@ header{
 .sticky-corner{position:sticky;top:0;left:0;z-index:6;background:rgba(0,0,0,0.85);}
 
 /* Bars */
-.bar{
-  position:absolute;width:80px;
-  color:black;font-size:12px;font-weight:bold;
-  display:flex;align-items:center;justify-content:center;
-  border-radius:14px;
-  touch-action:none;
-  cursor:grab;
-  box-shadow:0 10px 25px rgba(0,0,0,.4);
-  transition:.15s;
-}
-.bar:active{transform:scale(1.02);box-shadow:0 20px 40px rgba(0,0,0,.8);}
-.bar::before{
-  content:"";
-  position:absolute;
-  inset:2px;
-  border-radius:14px;
-  z-index:-1;
-}
-.bar.red{background:rgba(255,80,80,0.7);}
-.bar.red::before{background:#ff1a1a;}
-.bar.blue{background:rgba(80,180,255,0.7);}
-.bar.blue::before{background:#0080ff;}
-.bar.yellow{background:rgba(255,255,80,0.7);}
-.bar.yellow::before{background:#ffcc00;}
-
+.bar{position:absolute;width:80px;color:black;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;border-radius:14px;touch-action:none;cursor:grab;box-shadow:0 10px 25px rgba(0,0,0,.4);}
+.bar.locked{opacity:0.6;cursor:not-allowed;}
+.bar::before{content:"";position:absolute;inset:2px;border-radius:14px;z-index:-1;}
+.bar.red{background:rgba(255,80,80,0.7);} .bar.red::before{background:#ff1a1a;}
+.bar.blue{background:rgba(80,180,255,0.7);} .bar.blue::before{background:#0080ff;}
+.bar.yellow{background:rgba(255,255,80,0.7);} .bar.yellow::before{background:#ffcc00;}
 .handle{position:absolute;width:100%;height:10px;}
 .handle.top{top:0;}
 .handle.bottom{bottom:0;}
+.lockBtn{position:absolute;top:2px;right:4px;font-size:12px;background:rgba(0,0,0,0.5);color:white;border:none;border-radius:6px;padding:2px 4px;z-index:10;}
 
 /* Dock */
-.dock{
-  position:fixed;
-  left:50%;
-  transform:translateX(-50%);
-  bottom:calc(0px + env(safe-area-inset-bottom));
-  width:100%;
-  max-width:720px;
-  padding:16px 20px 22px;
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-end;
-  gap:14px;
-  background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.85));
-  backdrop-filter:blur(20px);
-  z-index:50;
-}
-.dock .sideBtn{
-  flex:1;border:none;padding:14px 12px;border-radius:18px;
-  font-weight:bold;font-size:15px;text-align:center;color:black;
-  box-shadow:0 8px 25px rgba(0,0,0,.5);
-}
-.dock .fab{
-  width:88px;height:88px;border-radius:50%;
-  border:none;font-size:18px;font-weight:bold;
-  background:linear-gradient(135deg,#ff0080,#ffcc00);
-  color:black;
-  box-shadow:0 15px 40px rgba(0,0,0,.7);
-  transform:translateY(-22px);
-}
-.btn-calc{background:linear-gradient(135deg,#00ffa6,#00c8ff);}
-.btn-wait{background:linear-gradient(135deg,#ff6600,#ffaa00);}
-.dock button:active{transform:scale(.92);}
+.dock{position:fixed;left:50%;transform:translateX(-50%);bottom:env(safe-area-inset-bottom);width:100%;max-width:760px;padding:20px 22px 28px;display:flex;gap:18px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.95));backdrop-filter:blur(35px);z-index:999;}
+.dock button{border:none;border-radius:24px;font-weight:800;font-size:15px;padding:18px 14px;color:white;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.28);box-shadow:0 12px 35px rgba(0,0,0,0.65);}
+.btn-calc{flex:1;background:linear-gradient(145deg,rgba(0,255,220,0.35),rgba(0,120,255,0.5));}
+.btn-wait{flex:1;background:linear-gradient(145deg,rgba(255,120,0,0.35),rgba(255,220,0,0.5));}
+.fab{flex:0 0 100px;height:100px;border-radius:50%;font-size:20px;font-weight:900;background:linear-gradient(135deg,#ff00ff,#00ffff);color:black;border:2px solid rgba(255,255,255,0.5);box-shadow:0 0 50px rgba(255,0,255,.9),0 0 100px rgba(0,255,255,.7),0 25px 60px rgba(0,0,0,.95);transform:translateY(-36px);}
 
 /* Modal */
-.modalBg{
-  position:fixed;inset:0;background:rgba(0,0,0,0.65);
-  display:none;align-items:center;justify-content:center;z-index:99;
-}
-.modal{
-  background:linear-gradient(180deg,rgba(40,40,80,.95),rgba(10,10,30,.95));
-  backdrop-filter:blur(30px);
-  padding:22px;border-radius:22px;width:320px;text-align:center;
-  border:1px solid rgba(255,255,255,.15);
-  box-shadow:0 20px 60px rgba(0,0,0,.6);
-}
-.modal input{
-  width:100%;padding:10px;border-radius:12px;border:none;margin-bottom:10px;
-  font-size:16px;
-}
+.modalBg{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:9999;}
+.modal{background:linear-gradient(180deg,rgba(40,40,80,.95),rgba(10,10,30,.95));padding:22px;border-radius:22px;width:320px;text-align:center;}
+.modal input{width:100%;padding:10px;border-radius:12px;border:none;margin-bottom:10px;}
 .colorPick{display:flex;justify-content:space-around;margin:10px 0;}
 .colorPick div{width:32px;height:32px;border-radius:50%;border:2px solid white;}
-.redPick{background:red;}
-.bluePick{background:blue;}
-.yellowPick{background:yellow;}
-
-.listBox{
-  max-height:200px;
-  overflow:auto;
-  background:rgba(0,0,0,0.4);
-  padding:10px;
-  border-radius:10px;
-  text-align:left;
-}
+.redPick{background:red;} .bluePick{background:blue;} .yellowPick{background:yellow;}
+.listBox{max-height:200px;overflow:auto;background:rgba(0,0,0,0.4);padding:10px;border-radius:10px;}
 </style>
 </head>
 
@@ -175,83 +77,92 @@ header{
 <header>🏢 入寮管理システム</header>
 
 <div class="monthSelect glass">
-  表示月： <input type="month" id="monthPicker">
+表示月： <input type="month" id="monthPicker">
 </div>
 
 <div class="wrapper">
-<div class="glass scroll" id="scroll">
-  <div class="grid" id="grid"></div>
-</div>
+<div class="glass scroll" id="scroll"><div class="grid" id="grid"></div></div>
 </div>
 
 <div class="dock">
-  <button class="sideBtn btn-calc" id="calcBtn">💰<br>寮費</button>
-  <button class="fab" id="enterBtn">➕<br>入寮</button>
-  <button class="sideBtn btn-wait" id="todayWaitBtn">📋<br>空室待ち</button>
+<button class="btn-calc" id="calcBtn">💰<br>寮費</button>
+<button class="fab" id="enterBtn">➕<br>入寮</button>
+<button class="btn-wait" id="todayWaitBtn">📋<br>空室待ち</button>
 </div>
 
-<!-- 入寮登録 -->
+<!-- 入寮 -->
 <div class="modalBg" id="modalBg">
-  <div class="modal">
-    <h3>入寮者登録</h3>
-    <input id="nameInput" placeholder="名前">
-    <div class="colorPick">
-      <div class="redPick" data-color="red"></div>
-      <div class="bluePick" data-color="blue"></div>
-      <div class="yellowPick" data-color="yellow"></div>
-    </div>
-    <button id="addBtn">追加</button>
-    <button onclick="modalBg.style.display='none'">キャンセル</button>
-  </div>
+<div class="modal">
+<h3>入寮者登録</h3>
+<input id="nameInput" placeholder="名前">
+<div class="colorPick">
+<div class="redPick" data-color="red"></div>
+<div class="bluePick" data-color="blue"></div>
+<div class="yellowPick" data-color="yellow"></div>
+</div>
+<button id="addBtn">追加</button>
+<button onclick="modalBg.style.display='none'">キャンセル</button>
+</div>
 </div>
 
 <!-- 寮費 -->
 <div class="modalBg" id="feeModal">
-  <div class="modal">
-    <h3>個人別 寮費</h3>
-    <input id="priceInput" type="number">
-    <div id="feeList"></div>
-    <button onclick="feeModal.style.display='none'">閉じる</button>
-  </div>
+<div class="modal">
+<h3>個人別 寮費</h3>
+<input id="priceInput" type="number">
+<div id="feeList"></div>
+<button onclick="feeModal.style.display='none'">閉じる</button>
+</div>
 </div>
 
 <!-- 空室待ち -->
 <div class="modalBg" id="waitModal">
-  <div class="modal">
-    <h3>今日の空室待ち</h3>
-    <div class="listBox" id="waitList"></div>
-    <button onclick="waitModal.style.display='none'">閉じる</button>
-  </div>
+<div class="modal">
+<h3>今日の空室待ち</h3>
+<div class="listBox" id="waitList"></div>
+<button onclick="waitModal.style.display='none'">閉じる</button>
+</div>
+</div>
+
+<!-- 削除 -->
+<div class="modalBg" id="deleteModal">
+<div class="modal">
+<h3>削除確認</h3>
+<div id="deleteText"></div>
+<button id="delYes">削除</button>
+<button onclick="deleteModal.style.display='none'">キャンセル</button>
+</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* Firebase */
 const firebaseConfig = {
   apiKey: "AIzaSyAktEtPenYgXw1Xl5oAf7faiLLL0vCX4B0",
   authDomain: "dcpdcp-3e87c.firebaseapp.com",
   projectId: "dcpdcp-3e87c",
   storageBucket: "dcpdcp-3e87c.firebasestorage.app",
   messagingSenderId: "182411963471",
-  appId: "1:182411963471:web:341de9698996208f240e3a",
-  measurementId: "G-WJQDGSXM09"
+  appId: "1:182411963471:web:341de9698996208f240e3a"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ===== Core =====
+/* ===== 月管理（絶対に消えない方式） ===== */
+let selectedMonth = new Date().toISOString().slice(0,7);
+
+/* Core */
 const roomNames=["P209","P306","P307","P507","FG406","空室待ち1","空室待ち2","空室待ち3","空室待ち4","空室待ち5"];
 const rooms=roomNames.length;
 const cellHeight=28,colWidth=80,headerHeight=28;
 const scroll=document.getElementById("scroll");
 const grid=document.getElementById("grid");
 const monthPicker=document.getElementById("monthPicker");
-const today=new Date();
-monthPicker.value=today.toISOString().slice(0,7);
+monthPicker.value = selectedMonth;
 
-// ===== Grid =====
+/* Grid */
 function buildGrid(y,m){
   grid.innerHTML="";
   const lastDay=new Date(y,m,0).getDate();
@@ -260,147 +171,153 @@ function buildGrid(y,m){
   roomNames.forEach(r=>grid.innerHTML+=`<div class="sticky-top">${r}</div>`);
   for(let d=1;d<=lastDay;d++){
     grid.innerHTML+=`<div class="date dateSpan sticky-left">${d}</div>`;
-    for(let r=0;r<rooms;r++) grid.innerHTML+=`<div></div>`;
-    for(let r=0;r<rooms;r++) grid.innerHTML+=`<div></div>`;
+    for(let r=0;r<rooms*2;r++) grid.innerHTML+=`<div></div>`;
   }
 }
 
-// ===== Realtime Loop Fix =====
+/* Firestore */
 let isLocalUpdate=false;
-function getDocRef(){return doc(db,"dormitory",monthPicker.value);}
+let unsubscribeRealtime=null;
+function getDocRef(){return doc(db,"dormitory",selectedMonth);}
 
 async function saveMonthData(){
   if(isLocalUpdate) return;
   isLocalUpdate=true;
-
   const data=[...document.querySelectorAll(".bar")].map(b=>({
-    name:b.childNodes[0].nodeValue.trim(),
-    room:b.dataset.room,start:b.dataset.start,end:b.dataset.end,
-    color:[...b.classList].find(c=>["red","blue","yellow"].includes(c))
+    name:b.dataset.name,room:b.dataset.room,start:b.dataset.start,end:b.dataset.end,
+    color:b.dataset.color,locked:b.dataset.locked==="true"
   }));
-
   await setDoc(getDocRef(),{data});
   setTimeout(()=>isLocalUpdate=false,300);
 }
 
 function listenRealtime(){
-  onSnapshot(getDocRef(),snap=>{
-    if(isLocalUpdate || !snap.exists()) return;
+  if(unsubscribeRealtime){unsubscribeRealtime();}
+  document.querySelectorAll(".bar").forEach(b=>b.remove());
 
+  unsubscribeRealtime = onSnapshot(getDocRef(),snap=>{
+    if(isLocalUpdate) return;
     document.querySelectorAll(".bar").forEach(b=>b.remove());
-
-    snap.data().data.forEach(d=>{
-      const bar=document.createElement("div");
-      bar.className="bar "+d.color;
-      bar.innerHTML=`${d.name}<div class="handle top"></div><div class="handle bottom"></div>`;
+    (snap.data()?.data||[]).forEach(d=>{
+      const bar=createBar(d.name,d.color,d.locked);
       scroll.appendChild(bar);
       placeBar(bar,d.room,d.start,d.end);
       makeDraggable(bar);
+      enableTapDelete(bar);
     });
-
     autoCalc();
   });
 }
 
-// ===== Bar =====
+/* Bar */
+function createBar(name,color,locked=false){
+  const bar=document.createElement("div");
+  bar.className="bar "+color+(locked?" locked":"");
+  bar.dataset.name=name; bar.dataset.color=color; bar.dataset.locked=locked;
+  bar.innerHTML=`${name}<button class="lockBtn">${locked?"🔒":"🔓"}</button>
+  <div class="handle top"></div><div class="handle bottom"></div>`;
+  bar.querySelector(".lockBtn").onclick=e=>{
+    e.stopPropagation();
+    bar.dataset.locked=bar.dataset.locked==="true"?"false":"true";
+    bar.classList.toggle("locked");
+    e.target.textContent=bar.dataset.locked==="true"?"🔒":"🔓";
+    saveMonthData();
+  };
+  return bar;
+}
+
 function placeBar(bar,room,start,end){
-  bar.dataset.room=room;
-  bar.dataset.start=start;
-  bar.dataset.end=end;
+  bar.dataset.room=room; bar.dataset.start=start; bar.dataset.end=end;
   bar.style.left=60+(room-1)*colWidth+"px";
   bar.style.top=headerHeight+(start-1)*cellHeight+"px";
   bar.style.height=(end-start+1)*cellHeight+"px";
   saveMonthData();
 }
 
-// ===== Drag + Resize (Mobile Optimized) =====
+/* Drag Resize */
 function makeDraggable(bar){
   let sx,sy,sl,st,resize=null;
-
   bar.addEventListener("pointerdown",e=>{
-    resize=e.target.classList.contains("top")?"top":
-           e.target.classList.contains("bottom")?"bottom":null;
+    if(bar.dataset.locked==="true") return;
+    resize=e.target.classList.contains("top")?"top":e.target.classList.contains("bottom")?"bottom":null;
     bar.setPointerCapture(e.pointerId);
     sx=e.clientX; sy=e.clientY;
     sl=parseInt(bar.style.left); st=parseInt(bar.style.top);
   });
-
   bar.addEventListener("pointermove",e=>{
-    if(sx==null)return;
+    if(sx==null||bar.dataset.locked==="true") return;
     const dx=e.clientX-sx, dy=e.clientY-sy;
-
     if(resize==="top"){
       let nh=parseInt(bar.style.height)-dy;
       if(nh<cellHeight*2)return;
-      bar.style.top=st+dy+"px";
-      bar.style.height=nh+"px";
-    }
-    else if(resize==="bottom"){
+      bar.style.top=st+dy+"px"; bar.style.height=nh+"px";
+    }else if(resize==="bottom"){
       let nh=parseInt(bar.style.height)+dy;
       if(nh<cellHeight*2)return;
-      bar.style.height=nh+"px";
-      sy=e.clientY;
-    }
-    else{
-      bar.style.left=sl+dx+"px";
-      bar.style.top=st+dy+"px";
+      bar.style.height=nh+"px"; sy=e.clientY;
+    }else{
+      bar.style.left=sl+dx+"px"; bar.style.top=st+dy+"px";
     }
   });
-
   bar.addEventListener("pointerup",()=>{
+    if(sx==null||bar.dataset.locked==="true") return;
     sx=null;
-
     let top=parseInt(bar.style.top), left=parseInt(bar.style.left), h=parseInt(bar.style.height);
     let s=Math.round((top-headerHeight)/cellHeight)+1;
     let rows=Math.round(h/cellHeight);
     let e=s+rows-1;
     let r=Math.round((left-60)/colWidth)+1;
-
     s=Math.max(1,Math.min(totalRows-1,s));
     e=Math.max(s+1,Math.min(totalRows,e));
     r=Math.max(1,Math.min(rooms,r));
-
     placeBar(bar,r,s,e);
   });
 }
 
-// ===== Add =====
+/* Delete */
+let deleteTarget=null;
+function enableTapDelete(bar){
+  bar.addEventListener("click",e=>{
+    if(e.target.classList.contains("lockBtn")) return;
+    if(bar.dataset.locked==="true") return;
+    deleteTarget=bar;
+    deleteText.textContent=bar.dataset.name+" を削除しますか？";
+    deleteModal.style.display="flex";
+  });
+}
+delYes.onclick=()=>{if(deleteTarget){deleteTarget.remove();saveMonthData();}deleteModal.style.display="none";};
+
+/* Add */
 let selectedColor="red";
 document.querySelectorAll(".colorPick div").forEach(c=>c.onclick=()=>selectedColor=c.dataset.color);
 enterBtn.onclick=()=>modalBg.style.display="flex";
 addBtn.onclick=()=>{
-  const name=nameInput.value.trim();
-  if(!name)return;
-  const bar=document.createElement("div");
-  bar.className="bar "+selectedColor;
-  bar.innerHTML=`${name}<div class="handle top"></div><div class="handle bottom"></div>`;
+  const name=nameInput.value.trim(); if(!name)return;
+  const bar=createBar(name,selectedColor,false);
   scroll.appendChild(bar);
   placeBar(bar,1,1,2);
-  makeDraggable(bar);
-  modalBg.style.display="none";
-  nameInput.value="";
+  makeDraggable(bar); enableTapDelete(bar);
+  modalBg.style.display="none"; nameInput.value="";
 };
 
-// ===== Fee =====
+/* Fee */
 const priceInput=document.getElementById("priceInput");
 const feeList=document.getElementById("feeList");
 let pricePerNight=2500;
 calcBtn.onclick=()=>{feeModal.style.display="flex";autoCalc();};
 priceInput.oninput=()=>{pricePerNight=Number(priceInput.value);autoCalc();};
-
 function autoCalc(){
   const map={};
   document.querySelectorAll(".bar").forEach(b=>{
-    const name=b.childNodes[0].nodeValue.trim();
     const rows=parseInt(b.dataset.end)-parseInt(b.dataset.start)+1;
     const nights=Math.floor(rows/2);
-    map[name]=(map[name]||0)+nights*pricePerNight;
+    map[b.dataset.name]=(map[b.dataset.name]||0)+nights*pricePerNight;
   });
   feeList.innerHTML="";
   for(const n in map) feeList.innerHTML+=`${n}：${map[n].toLocaleString()} 円<br>`;
 }
 
-// ===== 空室待ち =====
+/* Wait */
 todayWaitBtn.onclick=()=>{
   waitList.innerHTML="";
   const now=new Date();
@@ -410,19 +327,21 @@ todayWaitBtn.onclick=()=>{
     const bs=parseInt(b.dataset.start), be=parseInt(b.dataset.end);
     return r>=6 && !(be<s||bs>e);
   });
-  waitList.innerHTML=waits.length?waits.map(b=>b.childNodes[0].nodeValue.trim()).join("<br>"):"空室待ちはいません";
+  waitList.innerHTML=waits.length?waits.map(b=>b.dataset.name).join("<br>"):"空室待ちはいません";
   waitModal.style.display="flex";
 };
 
-// ===== Month Change =====
+/* Month Change */
 monthPicker.onchange=()=>{
-  const [y,m]=monthPicker.value.split("-");
+  selectedMonth = monthPicker.value || selectedMonth;
+  const [y,m]=selectedMonth.split("-");
+  document.querySelectorAll(".bar").forEach(b=>b.remove());
   buildGrid(y,Number(m));
   listenRealtime();
 };
 
-// Init
-buildGrid(today.getFullYear(),today.getMonth()+1);
+/* INIT */
+buildGrid(new Date().getFullYear(),new Date().getMonth()+1);
 listenRealtime();
 </script>
 
