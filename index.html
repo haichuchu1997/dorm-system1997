@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- ✅ iPhone / LINE 内ブラウザ最適 viewport -->
+<!-- LINE / iPhone 最適化 -->
 <meta name="viewport" content="
 width=device-width,
 initial-scale=1.0,
@@ -22,17 +22,10 @@ html,body{
   height:100%;
   background:radial-gradient(circle at top,#0f172a,#020617);
   color:white;
-  overscroll-behavior: none;
-  touch-action: manipulation;
+  overscroll-behavior:none;
 }
 
-/* LINE内ブラウザ 二重スクロール防止 */
-body{
-  overflow:hidden;
-  padding-bottom:env(safe-area-inset-bottom);
-}
-
-/* Glass UI */
+/* Glass Base */
 .glass{
   background:rgba(255,255,255,0.12);
   backdrop-filter:blur(20px);
@@ -46,10 +39,9 @@ header{
   text-align:center;
   font-size:20px;
   font-weight:bold;
-  letter-spacing:.5px;
 }
 
-/* Month selector */
+/* Month */
 .monthSelect{
   margin:10px;
   padding:12px;
@@ -59,14 +51,11 @@ header{
   padding:8px 14px;
   border-radius:12px;
   border:none;
-  font-size:16px; /* iOS zoom防止 */
+  font-size:16px;
 }
 
-/* Grid wrapper */
-.wrapper{
-  padding:10px;
-  height:calc(100vh - 240px);
-}
+/* Grid */
+.wrapper{padding:10px;height:calc(100vh - 250px);}
 .scroll{
   overflow:auto;
   height:100%;
@@ -101,29 +90,19 @@ header{
   border-radius:14px;
   touch-action:none;
   cursor:grab;
+  backdrop-filter:blur(10px);
   box-shadow:0 10px 25px rgba(0,0,0,.4);
-  transition:.15s;
-}
-.bar:active{transform:scale(1.02);}
-.bar::before{
-  content:"";
-  position:absolute;
-  inset:2px;
-  border-radius:14px;
-  z-index:-1;
 }
 .bar.red{background:rgba(255,80,80,0.7);}
-.bar.red::before{background:#ff1a1a;}
 .bar.blue{background:rgba(80,180,255,0.7);}
-.bar.blue::before{background:#0080ff;}
 .bar.yellow{background:rgba(255,255,80,0.7);}
-.bar.yellow::before{background:#ffcc00;}
 
+/* Handles */
 .handle{position:absolute;width:100%;height:6px;}
 .handle.top{top:0;}
 .handle.bottom{bottom:0;}
 
-/* Dock */
+/* ================= GLASS DOCK ================= */
 .dock{
   position:fixed;
   left:50%;
@@ -131,50 +110,74 @@ header{
   bottom:env(safe-area-inset-bottom);
   width:100%;
   max-width:720px;
-  padding:16px 20px 22px;
+  padding:14px 16px;
   display:flex;
-  justify-content:space-between;
-  align-items:flex-end;
-  gap:14px;
-  background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.85));
-  backdrop-filter:blur(20px);
+  gap:12px;
+  background:rgba(0,0,0,0.35);
+  backdrop-filter:blur(25px);
+  border-top:1px solid rgba(255,255,255,0.15);
   z-index:50;
 }
-.dock .sideBtn{
-  flex:1;border:none;padding:14px;border-radius:18px;
-  font-weight:bold;font-size:15px;text-align:center;color:black;
+
+/* Glass Button */
+.dock button{
+  flex:1;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.12);
+  backdrop-filter:blur(15px);
+  color:white;
+  font-weight:bold;
+  font-size:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+  transition:.2s;
 }
-.dock .fab{
-  width:88px;height:88px;border-radius:50%;
-  border:none;font-size:18px;font-weight:bold;
-  background:linear-gradient(135deg,#ff0080,#ffcc00);
+.dock button:hover{
+  background:rgba(255,255,255,0.25);
+}
+.dock button:active{
+  transform:scale(.95);
+  box-shadow:0 0 15px rgba(0,255,255,.6);
+}
+
+/* Floating Add Button */
+.fab{
+  flex:0 0 80px;
+  height:80px;
+  border-radius:50%;
+  font-size:18px;
+  background:linear-gradient(135deg,#00e0ff,#ff00ff);
+  color:black;
+  box-shadow:0 15px 40px rgba(0,0,0,.7);
 }
 
 /* Modal */
 .modalBg{
-  position:fixed;inset:0;background:rgba(0,0,0,0.65);
-  display:none;align-items:center;justify-content:center;z-index:99;
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.65);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
 }
 .modal{
-  background:linear-gradient(180deg,rgba(40,40,80,.95),rgba(10,10,30,.95));
-  padding:22px;border-radius:22px;width:320px;text-align:center;
+  background:rgba(30,30,60,0.95);
+  backdrop-filter:blur(30px);
+  padding:22px;
+  border-radius:20px;
+  width:320px;
+  border:1px solid rgba(255,255,255,.2);
 }
 .modal input{
-  width:100%;padding:10px;border-radius:12px;border:none;margin-bottom:10px;
-  font-size:16px; /* iOS zoom防止 */
+  width:100%;
+  padding:10px;
+  border-radius:12px;
+  border:none;
+  margin-bottom:10px;
+  font-size:16px;
 }
 </style>
-
-<!-- ✅ LINE内ブラウザ警告（任意） -->
-<script>
-(function(){
-  const ua = navigator.userAgent;
-  if(ua.includes("Line")){
-    console.log("LINE内ブラウザ検知");
-  }
-})();
-</script>
-
 </head>
 
 <body>
@@ -191,13 +194,14 @@ header{
 </div>
 </div>
 
+<!-- Dock -->
 <div class="dock">
-<button id="calcBtn" class="sideBtn">💰 寮費</button>
-<button id="enterBtn" class="fab">➕ 入寮</button>
-<button id="todayWaitBtn" class="sideBtn">📋 空室待ち</button>
+<button id="calcBtn">💰 寮費</button>
+<button id="enterBtn" class="fab">➕</button>
+<button id="todayWaitBtn">📋 空室待ち</button>
 </div>
 
-<!-- 入寮登録 -->
+<!-- 入寮 -->
 <div class="modalBg" id="modalBg">
 <div class="modal">
 <h3>入寮者登録</h3>
@@ -207,29 +211,38 @@ header{
 </div>
 </div>
 
-<script>
-// ===== LINE iOS キーボード時 画面固定 =====
-document.querySelectorAll("input").forEach(i=>{
-  i.addEventListener("focus",()=>{
-    document.body.style.position="fixed";
-    document.body.style.width="100%";
-  });
-  i.addEventListener("blur",()=>{
-    document.body.style.position="";
-    document.body.style.width="";
-  });
-});
+<!-- 寮費 -->
+<div class="modalBg" id="feeModal">
+<div class="modal">
+<h3>寮費</h3>
+<input id="priceInput" type="number">
+<div id="feeList"></div>
+<button onclick="feeModal.style.display='none'">閉じる</button>
+</div>
+</div>
 
-// ===== 以下は元システム最低限のGrid生成 =====
+<!-- 空室待ち -->
+<div class="modalBg" id="waitModal">
+<div class="modal">
+<h3>今日の空室待ち</h3>
+<div id="waitList"></div>
+<button onclick="waitModal.style.display='none'">閉じる</button>
+</div>
+</div>
+
+<script>
+// ===== Rooms =====
 const roomNames=["P209","P306","P307","P507","FG406","空室待ち1","空室待ち2","空室待ち3","空室待ち4","空室待ち5"];
 const rooms=roomNames.length;
 const cellHeight=28,colWidth=80,headerHeight=28;
-const grid=document.getElementById("grid");
+
 const scroll=document.getElementById("scroll");
+const grid=document.getElementById("grid");
 const monthPicker=document.getElementById("monthPicker");
 const today=new Date();
 monthPicker.value=today.toISOString().slice(0,7);
 
+// ===== Grid =====
 function buildGrid(y,m){
   grid.innerHTML="";
   const lastDay=new Date(y,m,0).getDate();
@@ -241,6 +254,59 @@ function buildGrid(y,m){
     for(let r=0;r<rooms*2;r++) grid.innerHTML+=`<div></div>`;
   }
 }
+
+// ===== Bar =====
+function placeBar(bar,room,start,end){
+  bar.dataset.room=room;
+  bar.dataset.start=start;
+  bar.dataset.end=end;
+  bar.style.left=60+(room-1)*colWidth+"px";
+  bar.style.top=headerHeight+(start-1)*cellHeight+"px";
+  bar.style.height=(end-start+1)*cellHeight+"px";
+}
+
+// ===== Drag =====
+function makeDraggable(bar){
+  let sx,sy,sl,st;
+  bar.onpointerdown=e=>{
+    bar.setPointerCapture(e.pointerId);
+    sx=e.clientX; sy=e.clientY;
+    sl=parseInt(bar.style.left); st=parseInt(bar.style.top);
+  };
+  bar.onpointermove=e=>{
+    if(!sx) return;
+    bar.style.left=sl+(e.clientX-sx)+"px";
+    bar.style.top=st+(e.clientY-sy)+"px";
+  };
+  bar.onpointerup=()=>{
+    sx=null;
+  };
+}
+
+// ===== Add =====
+enterBtn.onclick=()=>modalBg.style.display="flex";
+addBtn.onclick=()=>{
+  const name=nameInput.value.trim();
+  if(!name)return;
+  const bar=document.createElement("div");
+  bar.className="bar red";
+  bar.textContent=name;
+  scroll.appendChild(bar);
+  placeBar(bar,1,1,2);
+  makeDraggable(bar);
+  modalBg.style.display="none";
+};
+
+// ===== Fee =====
+calcBtn.onclick=()=>feeModal.style.display="flex";
+
+// ===== Wait =====
+todayWaitBtn.onclick=()=>{
+  waitList.innerHTML="（デモ）空室待ちなし";
+  waitModal.style.display="flex";
+};
+
+// Init
 buildGrid(today.getFullYear(),today.getMonth()+1);
 </script>
 
