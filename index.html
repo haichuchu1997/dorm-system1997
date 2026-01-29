@@ -232,27 +232,41 @@ const CONFIG={CELL_W:92,CELL_H:58,ROOM_W:200,DAYS:62,HALF:()=>CONFIG.CELL_W/2};
 let rooms=["P209","P306","P307","P507","FG406"];
 let stays=[];
 let monthData={};
+let isLocalUpdate=false; // ループ防止フラグ
 
-/* STORAGE LOCAL + FIREBASE */
+/* STORAGE */
 function getMonthKey(){return current.getFullYear()+"-"+(current.getMonth()+1);}
 
 async function saveMonth(){
+ isLocalUpdate=true;
  monthData[getMonthKey()]=JSON.parse(JSON.stringify(stays));
  localStorage.setItem("dormMonthData",JSON.stringify(monthData));
-
- // Firestore Save
- await db.collection("dormMonths").doc(getMonthKey()).set({stays});
+ await db.collection("dormMonths").doc(getMonthKey()).set({
+   stays,
+   updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+ });
+ setTimeout(()=>isLocalUpdate=false,300);
 }
 
 async function loadMonth(){
  monthData=JSON.parse(localStorage.getItem("dormMonthData")||"{}");
  stays=monthData[getMonthKey()]||[];
 
- // Firestore Load
  const doc=await db.collection("dormMonths").doc(getMonthKey()).get();
  if(doc.exists){
    stays=doc.data().stays||stays;
  }
+}
+
+/* REALTIME SYNC */
+function listenRealtime(){
+ db.collection("dormMonths").doc(getMonthKey())
+ .onSnapshot(doc=>{
+   if(!doc.exists) return;
+   if(isLocalUpdate) return; // 自分の更新は無視
+   stays = doc.data().stays || [];
+   renderGrid(); syncLayer(); renderBlocks();
+ });
 }
 
 /* MONTH */
@@ -423,14 +437,16 @@ async function changeMonth(d){
  current.setMonth(current.getMonth()+d);
  updateMonthInfo();
  await loadMonth();
- render();
+ listenRealtime();
+ renderGrid();syncLayer();renderBlocks();
 }
 
 /* INIT */
 (async ()=>{
  updateMonthInfo();
  await loadMonth();
- render();
+ listenRealtime();
+ renderGrid();syncLayer();renderBlocks();
 })();
 </script>
 
