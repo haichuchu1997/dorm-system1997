@@ -4,28 +4,24 @@
 <meta charset="UTF-8">
 
 <!-- LINE / iPhone 最適化 -->
-<meta name="viewport" content="
-width=device-width,
-initial-scale=1.0,
-maximum-scale=1.0,
-user-scalable=no,
-viewport-fit=cover
-">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
 <title>入寮管理システム</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+
 <style>
 *{box-sizing:border-box;font-family:'Nunito',system-ui;margin:0;padding:0;}
-
-html,body{
-  height:100%;
+body{
   background:radial-gradient(circle at top,#0f172a,#020617);
   color:white;
-  overscroll-behavior:none;
+  padding-bottom:320px;
 }
 
-/* Glass Base */
+/* Glass UI */
 .glass{
   background:rgba(255,255,255,0.12);
   backdrop-filter:blur(20px);
@@ -39,9 +35,10 @@ header{
   text-align:center;
   font-size:20px;
   font-weight:bold;
+  letter-spacing:.5px;
 }
 
-/* Month */
+/* Month selector */
 .monthSelect{
   margin:10px;
   padding:12px;
@@ -51,17 +48,12 @@ header{
   padding:8px 14px;
   border-radius:12px;
   border:none;
-  font-size:16px;
+  font-size:14px;
 }
 
 /* Grid */
-.wrapper{padding:10px;height:calc(100vh - 250px);}
-.scroll{
-  overflow:auto;
-  height:100%;
-  position:relative;
-  -webkit-overflow-scrolling:touch;
-}
+.wrapper{padding:10px;}
+.scroll{overflow:auto;max-height:70vh;position:relative;}
 .grid{
   display:grid;
   grid-template-columns:60px repeat(10,80px);
@@ -90,92 +82,91 @@ header{
   border-radius:14px;
   touch-action:none;
   cursor:grab;
-  backdrop-filter:blur(10px);
   box-shadow:0 10px 25px rgba(0,0,0,.4);
+  transition:.15s;
+}
+.bar:active{transform:scale(1.02);box-shadow:0 20px 40px rgba(0,0,0,.8);}
+.bar::before{
+  content:"";
+  position:absolute;
+  inset:2px;
+  border-radius:14px;
+  z-index:-1;
 }
 .bar.red{background:rgba(255,80,80,0.7);}
+.bar.red::before{background:#ff1a1a;}
 .bar.blue{background:rgba(80,180,255,0.7);}
+.bar.blue::before{background:#0080ff;}
 .bar.yellow{background:rgba(255,255,80,0.7);}
+.bar.yellow::before{background:#ffcc00;}
 
-/* Handles */
 .handle{position:absolute;width:100%;height:6px;}
 .handle.top{top:0;}
 .handle.bottom{bottom:0;}
 
-/* ================= GLASS DOCK ================= */
+/* Dock */
 .dock{
   position:fixed;
   left:50%;
   transform:translateX(-50%);
-  bottom:env(safe-area-inset-bottom);
+  bottom:calc(0px + env(safe-area-inset-bottom));
   width:100%;
   max-width:720px;
-  padding:14px 16px;
+  padding:16px 20px 22px;
   display:flex;
-  gap:12px;
-  background:rgba(0,0,0,0.35);
-  backdrop-filter:blur(25px);
-  border-top:1px solid rgba(255,255,255,0.15);
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:14px;
+  background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.85));
+  backdrop-filter:blur(20px);
   z-index:50;
 }
-
-/* Glass Button */
-.dock button{
-  flex:1;
-  padding:14px;
-  border-radius:18px;
-  border:1px solid rgba(255,255,255,0.2);
-  background:rgba(255,255,255,0.12);
-  backdrop-filter:blur(15px);
-  color:white;
-  font-weight:bold;
-  font-size:14px;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
-  transition:.2s;
+.dock .sideBtn{
+  flex:1;border:none;padding:14px 12px;border-radius:18px;
+  font-weight:bold;font-size:15px;text-align:center;color:black;
+  box-shadow:0 8px 25px rgba(0,0,0,.5);
 }
-.dock button:hover{
-  background:rgba(255,255,255,0.25);
-}
-.dock button:active{
-  transform:scale(.95);
-  box-shadow:0 0 15px rgba(0,255,255,.6);
-}
-
-/* Floating Add Button */
-.fab{
-  flex:0 0 80px;
-  height:80px;
-  border-radius:50%;
-  font-size:18px;
-  background:linear-gradient(135deg,#00e0ff,#ff00ff);
+.dock .fab{
+  width:88px;height:88px;border-radius:50%;
+  border:none;font-size:18px;font-weight:bold;
+  background:linear-gradient(135deg,#ff0080,#ffcc00);
   color:black;
   box-shadow:0 15px 40px rgba(0,0,0,.7);
+  transform:translateY(-22px);
 }
+.btn-calc{background:linear-gradient(135deg,#00ffa6,#00c8ff);}
+.btn-wait{background:linear-gradient(135deg,#ff6600,#ffaa00);}
+.dock button:active{transform:scale(.92);}
 
 /* Modal */
 .modalBg{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,0.65);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:100;
+  position:fixed;inset:0;background:rgba(0,0,0,0.65);
+  display:none;align-items:center;justify-content:center;z-index:99;
 }
 .modal{
-  background:rgba(30,30,60,0.95);
+  background:linear-gradient(180deg,rgba(40,40,80,.95),rgba(10,10,30,.95));
   backdrop-filter:blur(30px);
-  padding:22px;
-  border-radius:20px;
-  width:320px;
-  border:1px solid rgba(255,255,255,.2);
+  padding:22px;border-radius:22px;width:320px;text-align:center;
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
 }
 .modal input{
-  width:100%;
-  padding:10px;
-  border-radius:12px;
-  border:none;
-  margin-bottom:10px;
+  width:100%;padding:10px;border-radius:12px;border:none;margin-bottom:10px;
   font-size:16px;
+}
+.colorPick{display:flex;justify-content:space-around;margin:10px 0;}
+.colorPick div{width:32px;height:32px;border-radius:50%;border:2px solid white;}
+.redPick{background:red;}
+.bluePick{background:blue;}
+.yellowPick{background:yellow;}
+
+.listBox{
+  max-height:200px;
+  overflow:auto;
+  background:rgba(0,0,0,0.4);
+  padding:10px;
+  border-radius:10px;
+  text-align:left;
 }
 </style>
 </head>
@@ -185,52 +176,73 @@ header{
 <header>🏢 入寮管理システム</header>
 
 <div class="monthSelect glass">
-表示月： <input type="month" id="monthPicker">
+  表示月： <input type="month" id="monthPicker">
 </div>
 
 <div class="wrapper">
 <div class="glass scroll" id="scroll">
-<div class="grid" id="grid"></div>
+  <div class="grid" id="grid"></div>
 </div>
 </div>
 
-<!-- Dock -->
 <div class="dock">
-<button id="calcBtn">💰 寮費</button>
-<button id="enterBtn" class="fab">➕</button>
-<button id="todayWaitBtn">📋 空室待ち</button>
+  <button class="sideBtn btn-calc" id="calcBtn">💰<br>寮費</button>
+  <button class="fab" id="enterBtn">➕<br>入寮</button>
+  <button class="sideBtn btn-wait" id="todayWaitBtn">📋<br>空室待ち</button>
 </div>
 
-<!-- 入寮 -->
+<!-- 入寮登録 -->
 <div class="modalBg" id="modalBg">
-<div class="modal">
-<h3>入寮者登録</h3>
-<input id="nameInput" placeholder="名前">
-<button id="addBtn">追加</button>
-<button onclick="modalBg.style.display='none'">キャンセル</button>
-</div>
+  <div class="modal">
+    <h3>入寮者登録</h3>
+    <input id="nameInput" placeholder="名前">
+    <div class="colorPick">
+      <div class="redPick" data-color="red"></div>
+      <div class="bluePick" data-color="blue"></div>
+      <div class="yellowPick" data-color="yellow"></div>
+    </div>
+    <button id="addBtn">追加</button>
+    <button onclick="modalBg.style.display='none'">キャンセル</button>
+  </div>
 </div>
 
 <!-- 寮費 -->
 <div class="modalBg" id="feeModal">
-<div class="modal">
-<h3>寮費</h3>
-<input id="priceInput" type="number">
-<div id="feeList"></div>
-<button onclick="feeModal.style.display='none'">閉じる</button>
-</div>
+  <div class="modal">
+    <h3>個人別 寮費</h3>
+    <input id="priceInput" type="number">
+    <div id="feeList"></div>
+    <button onclick="feeModal.style.display='none'">閉じる</button>
+  </div>
 </div>
 
 <!-- 空室待ち -->
 <div class="modalBg" id="waitModal">
-<div class="modal">
-<h3>今日の空室待ち</h3>
-<div id="waitList"></div>
-<button onclick="waitModal.style.display='none'">閉じる</button>
-</div>
+  <div class="modal">
+    <h3>今日の空室待ち</h3>
+    <div class="listBox" id="waitList"></div>
+    <button onclick="waitModal.style.display='none'">閉じる</button>
+  </div>
 </div>
 
-<script>
+<script type="module">
+// ===== Firebase =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAktEtPenYgXw1Xl5oAf7faiLLL0vCX4B0",
+  authDomain: "dcpdcp-3e87c.firebaseapp.com",
+  projectId: "dcpdcp-3e87c",
+  storageBucket: "dcpdcp-3e87c.firebasestorage.app",
+  messagingSenderId: "182411963471",
+  appId: "1:182411963471:web:341de9698996208f240e3a",
+  measurementId: "G-WJQDGSXM09"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 // ===== Rooms =====
 const roomNames=["P209","P306","P307","P507","FG406","空室待ち1","空室待ち2","空室待ち3","空室待ち4","空室待ち5"];
 const rooms=roomNames.length;
@@ -239,6 +251,7 @@ const cellHeight=28,colWidth=80,headerHeight=28;
 const scroll=document.getElementById("scroll");
 const grid=document.getElementById("grid");
 const monthPicker=document.getElementById("monthPicker");
+
 const today=new Date();
 monthPicker.value=today.toISOString().slice(0,7);
 
@@ -251,8 +264,38 @@ function buildGrid(y,m){
   roomNames.forEach(r=>grid.innerHTML+=`<div class="sticky-top">${r}</div>`);
   for(let d=1;d<=lastDay;d++){
     grid.innerHTML+=`<div class="date dateSpan sticky-left">${d}</div>`;
-    for(let r=0;r<rooms*2;r++) grid.innerHTML+=`<div></div>`;
+    for(let r=0;r<rooms;r++) grid.innerHTML+=`<div></div>`;
+    for(let r=0;r<rooms;r++) grid.innerHTML+=`<div></div>`;
   }
+}
+
+// ===== Firestore =====
+function getDocRef(){ return doc(db,"dormitory",monthPicker.value); }
+
+async function saveMonthData(){
+  const data=[...document.querySelectorAll(".bar")].map(b=>({
+    name:b.childNodes[0].nodeValue.trim(),
+    room:b.dataset.room,start:b.dataset.start,end:b.dataset.end,
+    color:[...b.classList].find(c=>["red","blue","yellow"].includes(c))
+  }));
+  await setDoc(getDocRef(),{data});
+}
+
+function listenRealtime(){
+  onSnapshot(getDocRef(),snap=>{
+    if(!snap.exists()) return;
+    const data=snap.data().data||[];
+    document.querySelectorAll(".bar").forEach(b=>b.remove());
+    data.forEach(d=>{
+      const bar=document.createElement("div");
+      bar.className="bar "+d.color;
+      bar.innerHTML=`${d.name}<div class="handle top"></div><div class="handle bottom"></div>`;
+      scroll.appendChild(bar);
+      placeBar(bar,d.room,d.start,d.end);
+      makeDraggable(bar);
+    });
+    autoCalc();
+  });
 }
 
 // ===== Bar =====
@@ -263,51 +306,98 @@ function placeBar(bar,room,start,end){
   bar.style.left=60+(room-1)*colWidth+"px";
   bar.style.top=headerHeight+(start-1)*cellHeight+"px";
   bar.style.height=(end-start+1)*cellHeight+"px";
+  saveMonthData();
 }
 
 // ===== Drag =====
 function makeDraggable(bar){
-  let sx,sy,sl,st;
-  bar.onpointerdown=e=>{
+  let sx,sy,sl,st,resize=null;
+  bar.addEventListener("pointerdown",e=>{
+    resize=e.target.classList.contains("top")?"top":e.target.classList.contains("bottom")?"bottom":null;
     bar.setPointerCapture(e.pointerId);
-    sx=e.clientX; sy=e.clientY;
-    sl=parseInt(bar.style.left); st=parseInt(bar.style.top);
-  };
-  bar.onpointermove=e=>{
-    if(!sx) return;
-    bar.style.left=sl+(e.clientX-sx)+"px";
-    bar.style.top=st+(e.clientY-sy)+"px";
-  };
-  bar.onpointerup=()=>{
+    sx=e.clientX;sy=e.clientY;
+    sl=parseInt(bar.style.left);st=parseInt(bar.style.top);
+  });
+  bar.addEventListener("pointermove",e=>{
+    if(sx==null)return;
+    const dx=e.clientX-sx,dy=e.clientY-sy;
+    if(resize==="top"){bar.style.top=st+dy+"px";bar.style.height=parseInt(bar.style.height)-dy+"px";}
+    else if(resize==="bottom"){bar.style.height=parseInt(bar.style.height)+dy+"px";sy=e.clientY;}
+    else{bar.style.left=sl+dx+"px";bar.style.top=st+dy+"px";}
+  });
+  bar.addEventListener("pointerup",()=>{
     sx=null;
-  };
+    let top=parseInt(bar.style.top),left=parseInt(bar.style.left);
+    let s=Math.round((top-headerHeight)/cellHeight)+1;
+    let h=Math.round(parseInt(bar.style.height)/cellHeight);
+    let e=s+h-1;
+    let r=Math.round((left-60)/colWidth)+1;
+    placeBar(bar,r,s,e);
+  });
 }
 
 // ===== Add =====
+let selectedColor="red";
+document.querySelectorAll(".colorPick div").forEach(c=>c.onclick=()=>selectedColor=c.dataset.color);
 enterBtn.onclick=()=>modalBg.style.display="flex";
 addBtn.onclick=()=>{
   const name=nameInput.value.trim();
   if(!name)return;
   const bar=document.createElement("div");
-  bar.className="bar red";
-  bar.textContent=name;
+  bar.className="bar "+selectedColor;
+  bar.innerHTML=`${name}<div class="handle top"></div><div class="handle bottom"></div>`;
   scroll.appendChild(bar);
   placeBar(bar,1,1,2);
   makeDraggable(bar);
   modalBg.style.display="none";
+  nameInput.value="";
 };
 
 // ===== Fee =====
-calcBtn.onclick=()=>feeModal.style.display="flex";
+const priceInput=document.getElementById("priceInput");
+const feeList=document.getElementById("feeList");
+let pricePerNight=2500;
+calcBtn.onclick=()=>{feeModal.style.display="flex";autoCalc();};
+priceInput.oninput=()=>{pricePerNight=Number(priceInput.value);autoCalc();};
 
-// ===== Wait =====
+function autoCalc(){
+  const map={};
+  document.querySelectorAll(".bar").forEach(b=>{
+    const name=b.childNodes[0].nodeValue.trim();
+    const rows=parseInt(b.dataset.end)-parseInt(b.dataset.start)+1;
+    const nights=Math.floor(rows/2);
+    const fee=nights*pricePerNight;
+    map[name]=(map[name]||0)+fee;
+  });
+  feeList.innerHTML="";
+  for(const n in map) feeList.innerHTML+=`${n}：${map[n].toLocaleString()} 円<br>`;
+}
+
+// ===== Today Wait =====
 todayWaitBtn.onclick=()=>{
-  waitList.innerHTML="（デモ）空室待ちなし";
+  waitList.innerHTML="";
+  const now=new Date();
+  const day=now.getDate();
+  const s=(day-1)*2+1, e=s+1;
+  const waits=[...document.querySelectorAll(".bar")].filter(b=>{
+    const r=parseInt(b.dataset.room);
+    const bs=parseInt(b.dataset.start), be=parseInt(b.dataset.end);
+    return r>=6 && !(be<s || bs>e);
+  });
+  waitList.innerHTML = waits.length ? waits.map(b=>b.childNodes[0].nodeValue.trim()).join("<br>") : "空室待ちはいません";
   waitModal.style.display="flex";
+};
+
+// ===== Month Change =====
+monthPicker.onchange=()=>{
+  const [y,m]=monthPicker.value.split("-");
+  buildGrid(y,Number(m));
+  listenRealtime();
 };
 
 // Init
 buildGrid(today.getFullYear(),today.getMonth()+1);
+listenRealtime();
 </script>
 
 </body>
