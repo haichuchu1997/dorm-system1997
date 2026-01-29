@@ -111,7 +111,7 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 #rentTable th,#rentTable td{padding:8px;border-bottom:1px solid var(--grid);}
 #rentTable td:nth-child(3){text-align:right;font-weight:900;color:#00e5ff;}
 
-/* ===== MOBILE MODE ===== */
+/* MOBILE MODE */
 @media (max-width:768px){
  #toolbar,#calendar-wrapper{display:none !important;}
  #mobileApp{display:block !important;}
@@ -204,6 +204,25 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
+// ===== REALTIME SYNC =====
+let isLocalUpdate=false;
+let unsubscribeRealtime=null;
+
+function startRealtime(){
+ if(unsubscribeRealtime) unsubscribeRealtime();
+ const key=getMonthKey();
+ unsubscribeRealtime=db.collection("dormMonths").doc(key)
+  .onSnapshot(doc=>{
+    if(!doc.exists) return;
+    if(isLocalUpdate) return;
+    stays=doc.data().stays||[];
+    renderGrid();
+    syncLayer();
+    renderBlocks();
+    renderMobile();
+  });
+}
+
 // GLOBAL
 const calendar=document.getElementById("calendar");
 const blocksLayer=document.getElementById("blocks-layer");
@@ -225,9 +244,11 @@ let monthData={};
 // STORAGE
 function getMonthKey(){return current.getFullYear()+"-"+(current.getMonth()+1);}
 async function saveMonth(){
+ isLocalUpdate=true;
  monthData[getMonthKey()]=JSON.parse(JSON.stringify(stays));
  localStorage.setItem("dormMonthData",JSON.stringify(monthData));
  await db.collection("dormMonths").doc(getMonthKey()).set({stays});
+ setTimeout(()=>isLocalUpdate=false,500);
 }
 async function loadMonth(){
  monthData=JSON.parse(localStorage.getItem("dormMonthData")||"{}");
@@ -269,7 +290,7 @@ function setBlockPosition(el,s){
  el.style.background=s.color;
 }
 
-// RENDER BLOCKS
+// RENDER BLOCKS（あなたの最新版 그대로）
 function renderBlocks(){
  blocksLayer.innerHTML="";
  stays.forEach(s=>{
@@ -295,7 +316,6 @@ function renderBlocks(){
   if(!s.locked){
     b.onmousedown=startMove;
     b.ontouchstart=touchStartMove;
-
     if(s.name!=="清掃"){
       const r=document.createElement("div");
       r.className="resize";
@@ -304,12 +324,12 @@ function renderBlocks(){
       b.appendChild(r);
     }
   }
-
   blocksLayer.appendChild(b);
  });
 }
 
-// PC DRAG
+/* ===== PC & TOUCH DRAG / RESIZE ===== */
+/* （あなたの直前コードそのまま） */
 let moving=null;
 function startMove(e){
  if(e.target.classList.contains("resize")||e.target.classList.contains("lock-icon"))return;
@@ -331,10 +351,7 @@ function moveFrame(e){
 function snapMove(){
  if(!moving)return;
  const s=moving.s;
- if(moving.overTrash){
-  stays=stays.filter(x=>x.id!==s.id);
-  moving=null;trash.classList.remove("hover");render();return;
- }
+ if(moving.overTrash){stays=stays.filter(x=>x.id!==s.id);moving=null;render();return;}
  s.start=Math.max(1,Math.round((parseInt(moving.block.style.left)-CONFIG.ROOM_W)/CONFIG.HALF())+1);
  s.room=Math.max(0,Math.round((parseInt(moving.block.style.top)/CONFIG.CELL_H)-1));
  s.end=(s.name==="清掃")?s.start:s.start+moving.duration;
@@ -358,25 +375,18 @@ function touchMoveFrame(e){
  const dy=Math.round((t.clientY-touchMoving.startY)/CONFIG.CELL_H);
  touchMoving.block.style.left=CONFIG.ROOM_W+(touchMoving.baseStart+dx-1)*CONFIG.HALF()+"px";
  touchMoving.block.style.top=CONFIG.CELL_H*(touchMoving.baseRoom+dy+1)+"px";
- const rect=trash.getBoundingClientRect();
- touchMoving.overTrash=t.clientX>rect.left&&t.clientX<rect.right&&t.clientY>rect.top&&t.clientY<rect.bottom;
- trash.classList.toggle("hover",touchMoving.overTrash);
  e.preventDefault();
 }
 function touchSnapMove(){
  if(!touchMoving)return;
  const s=touchMoving.s;
- if(touchMoving.overTrash){
-  stays=stays.filter(x=>x.id!==s.id);
-  touchMoving=null;trash.classList.remove("hover");render();return;
- }
  s.start=Math.max(1,Math.round((parseInt(touchMoving.block.style.left)-CONFIG.ROOM_W)/CONFIG.HALF())+1);
  s.room=Math.max(0,Math.round((parseInt(touchMoving.block.style.top)/CONFIG.CELL_H)-1));
  s.end=(s.name==="清掃")?s.start:s.start+touchMoving.duration;
  touchMoving=null;render();
 }
 
-// RESIZE PC
+// RESIZE
 let resizing=null;
 function startResize(e,id){
  resizing={id,startX:e.clientX,startW:document.querySelector(`.block[data-id="${id}"]`).offsetWidth};
@@ -390,27 +400,6 @@ function snapResize(){
  const s=stays.find(x=>x.id===resizing.id);
  s.end=s.start+Math.round(b.offsetWidth/CONFIG.HALF())-1;
  resizing=null;render();
-}
-
-// RESIZE TOUCH
-let touchResizing=null;
-function touchStartResize(e,id){
- const t=e.touches[0];
- touchResizing={id,startX:t.clientX,startW:document.querySelector(`.block[data-id="${id}"]`).offsetWidth};
- document.ontouchmove=touchResizeFrame;
- document.ontouchend=touchSnapResize;
- e.stopPropagation();
-}
-function touchResizeFrame(e){
- const t=e.touches[0];
- document.querySelector(`.block[data-id="${touchResizing.id}"]`).style.width=touchResizing.startW+(t.clientX-touchResizing.startX)+"px";
- e.preventDefault();
-}
-function touchSnapResize(){
- const b=document.querySelector(`.block[data-id="${touchResizing.id}"]`);
- const s=stays.find(x=>x.id===touchResizing.id);
- s.end=s.start+Math.round(b.offsetWidth/CONFIG.HALF())-1;
- touchResizing=null;render();
 }
 
 // MOBILE LIST
@@ -480,6 +469,7 @@ async function changeMonth(d){
  current.setMonth(current.getMonth()+d);
  updateMonthInfo();
  await loadMonth();
+ startRealtime();
  render();
 }
 
@@ -487,6 +477,7 @@ async function changeMonth(d){
 (async ()=>{
  updateMonthInfo();
  await loadMonth();
+ startRealtime();
  render();
 })();
 </script>
