@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Dorm Management SaaS ULTIMATE</title>
+
+<!-- ================= Firebase ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { 
+  getFirestore, doc, setDoc, onSnapshot,
+  collection, addDoc, updateDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAktEtPenYgXw1Xl5oAf7faiLLL0vCX4B0",
+  authDomain: "dcpdcp-3e87c.firebaseapp.com",
+  projectId: "dcpdcp-3e87c",
+  storageBucket: "dcpdcp-3e87c.firebasestorage.app",
+  messagingSenderId: "182411963471",
+  appId: "1:182411963471:web:341de9698996208f240e3a",
+  measurementId: "G-WJQDGSXM09"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+window.db = db;
+</script>
+
+<style>
+:root{
+ --cellW:92px; --cellH:58px; --roomW:200px;
+ --bg:#070a12; --grid:#1e2b4d;
+ --text:#e8ecf3; --muted:#8fa1b7;
+ --accent:#4f8cff; --danger:#ff4d4f;
+ --radius:16px;
+}
+*{box-sizing:border-box;}
+body{margin:0;padding:16px;background:#070a12;color:var(--text);font-family:Inter,Segoe UI,system-ui;}
+h2{font-size:24px;font-weight:900;margin-bottom:14px;}
+#toolbar{display:flex;gap:10px;align-items:center;padding:12px;background:#0c1324;border:1px solid var(--grid);border-radius:var(--radius);}
+#toolbar input,#toolbar select{background:#0a1222;color:white;border:1px solid var(--grid);padding:8px;border-radius:10px;}
+#toolbar button{background:#121c33;color:white;border:1px solid var(--grid);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:800;}
+#toolbar button:hover{background:#1b2a4d;border-color:#4f8cff;}
+#trash{margin-left:auto;padding:8px 16px;border:1px solid var(--danger);color:var(--danger);border-radius:12px;background:#0a1222;font-weight:900;transition:.2s;}
+#trash.hover{background:#ff4d4f;color:white;transform:scale(1.1);box-shadow:0 0 20px #ff4d4f;}
+#calendar-wrapper{margin-top:16px;background:#070a12;border:1px solid var(--grid);border-radius:16px;height:72vh;overflow:auto;position:relative;}
+.calendar{display:grid;grid-auto-rows:var(--cellH);}
+.header,.room{background:#0f172a;border-bottom:1px solid var(--grid);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--muted);}
+.room{justify-content:flex-start;padding-left:12px;border-right:1px solid var(--grid);color:white;position:sticky;left:0;z-index:5;}
+.header:first-child{position:sticky;left:0;z-index:6;}
+.cell{background:#070c18;border:1px solid rgba(255,255,255,.03);}
+#blocks-layer{position:absolute;top:0;left:0;pointer-events:none;min-width:100%;}
+.block{
+ pointer-events:auto;
+ position:absolute;
+ height:36px;border-radius:14px;padding:0 12px;
+ font-size:13px;font-weight:900;
+ display:flex;align-items:center;color:white;
+ border:1px solid rgba(255,255,255,.1);
+ background:linear-gradient(135deg,#dc2626,#f97316);
+ box-shadow:0 10px 28px rgba(0,0,0,.7);
+ transition:.15s;
+}
+.block:hover{transform:translateY(-2px) scale(1.02);}
+.block-name{flex:1;overflow:hidden;text-overflow:ellipsis;}
+.lock-icon{cursor:pointer;margin-right:8px;}
+.resize{width:16px;position:absolute;right:0;top:0;bottom:0;cursor:ew-resize;}
+.resize::after{content:"";position:absolute;right:6px;top:6px;bottom:6px;width:2px;background:white;}
+.block.dragging{box-shadow:0 0 0 2px #4f8cff,0 30px 80px rgba(79,140,255,.9);z-index:999;}
+.block.locked{opacity:.6;background:#374151;cursor:not-allowed;}
+.block.cleaning{background:linear-gradient(135deg,#2563eb,#38bdf8);border:2px solid #3b82f6;color:white;}
+.block.cleaning::before{content:"🧹 清掃";background:#1d4ed8;color:white;padding:2px 10px;border-radius:999px;margin-right:8px;font-size:12px;}
+.block.cleaning .block-name,.block.cleaning .resize,.block.cleaning .lock-icon{display:none;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:9999;}
+.modal{background:#0c1324;padding:20px;border-radius:14px;border:1px solid var(--grid);width:520px;color:white;}
+#rentTable{width:100%;border-collapse:collapse;margin-top:10px;}
+#rentTable th,#rentTable td{padding:8px;border-bottom:1px solid var(--grid);}
+#rentTable td:nth-child(3){text-align:right;font-weight:900;color:#00e5ff;}
+</style>
+</head>
+
+<body>
+
+<h2>寮管理システム</h2>
+
+<div id="toolbar">
+<button onclick="changeMonth(-1)">←</button>
+<span id="monthLabel"></span>
+<button onclick="changeMonth(1)">→</button>
+
+<input id="newName" placeholder="名前">
+<select id="newColor">
+<option value="linear-gradient(135deg,#dc2626,#f97316)">京都倶楽部</option>
+<option value="linear-gradient(135deg,#7c3aed,#ec4899)">人妻倶楽部</option>
+<option value="linear-gradient(135deg,#f59e0b,#facc15)">FIRST</option>
+</select>
+
+<button onclick="addBlock()">＋ 入居</button>
+<button onclick="addCleaning()">清掃</button>
+<button onclick="openRent()">💰 寮費</button>
+<div id="trash">🗑 削除</div>
+</div>
+
+<div id="calendar-wrapper">
+<div id="calendar" class="calendar"></div>
+<div id="blocks-layer"></div>
+</div>
+
+<div id="rentModal" class="modal-overlay">
+<div class="modal">
+<h3>寮費回収一覧</h3>
+<label>1泊料金：</label>
+<input id="rentPrice" type="number" value="2500">
+<table id="rentTable">
+<thead><tr><th>名前</th><th>泊数</th><th>回収額</th></tr></thead>
+<tbody></tbody>
+</table>
+<button onclick="calcRent()">再計算</button>
+<button onclick="closeRent()">閉じる</button>
+</div>
+</div>
+
+<script type="module">
+const calendar=document.getElementById("calendar");
+const blocksLayer=document.getElementById("blocks-layer");
+const monthLabel=document.getElementById("monthLabel");
+const newName=document.getElementById("newName");
+const newColor=document.getElementById("newColor");
+const trash=document.getElementById("trash");
+
+let current=new Date();
+const CONFIG={CELL_W:92,CELL_H:58,ROOM_W:200,DAYS:62,HALF:()=>CONFIG.CELL_W/2};
+let rooms=["P209","P306","P307","P507","FG406"];
+let stays=[];
+
+/* MONTH KEY */
+function getMonthKey(){return current.getFullYear()+"-"+(current.getMonth()+1);}
+
+/* FIRESTORE LOAD */
+function loadMonth(){
+ const ref = collection(db,"dormRooms",getMonthKey(),"stays");
+ onSnapshot(ref, snap=>{
+  stays = snap.docs.map(d=>({id:d.id,...d.data()}));
+  render();
+ });
+}
+
+/* FIRESTORE UPDATE */
+async function updateStay(id,data){
+ const ref = doc(db,"dormRooms",getMonthKey(),"stays",id);
+ await updateDoc(ref,data);
+}
+async function deleteStay(id){
+ await deleteDoc(doc(db,"dormRooms",getMonthKey(),"stays",id));
+}
+
+/* MONTH */
+function updateMonthInfo(){
+ const y=current.getFullYear(),m=current.getMonth();
+ CONFIG.DAYS=new Date(y,m+1,0).getDate()*2;
+ monthLabel.textContent=`${y}年 ${m+1}月`;
+}
+
+/* GRID */
+function createCell(c,t=""){const d=document.createElement("div");d.className=c;d.textContent=t;return d;}
+function renderGrid(){
+ calendar.innerHTML="";
+ calendar.style.gridTemplateColumns=`${CONFIG.ROOM_W}px repeat(${CONFIG.DAYS},${CONFIG.HALF()}px)`;
+ calendar.append(createCell("header","部屋"));
+ for(let d=1;d<=CONFIG.DAYS/2;d++){
+  const h=createCell("header",d);h.style.gridColumn="span 2";calendar.append(h);
+ }
+ rooms.forEach(r=>{
+  calendar.append(createCell("room",r));
+  for(let i=0;i<CONFIG.DAYS;i++)calendar.append(createCell("cell"));
+ });
+}
+function syncLayer(){blocksLayer.style.width=calendar.scrollWidth+"px";blocksLayer.style.height=calendar.scrollHeight+"px";}
+
+/* POSITION */
+function setBlockPosition(el,s){
+ const w=(s.end-s.start+1)*CONFIG.HALF();
+ const x=CONFIG.ROOM_W+(s.start-1)*CONFIG.HALF();
+ const y=CONFIG.CELL_H*(s.room+1)+(CONFIG.CELL_H-36)/2;
+ el.style.left=x+"px";el.style.top=y+"px";el.style.width=w+"px";
+ el.style.background=s.color;
+}
+
+/* RENDER BLOCKS */
+function renderBlocks(){
+ blocksLayer.innerHTML="";
+ stays.forEach(s=>{
+  const b=document.createElement("div");
+  b.className="block";
+  if(s.locked)b.classList.add("locked");
+  if(s.name==="清掃")b.classList.add("cleaning");
+  b.dataset.id=s.id;
+  setBlockPosition(b,s);
+
+  if(s.name!=="清掃"){
+    const lock=document.createElement("span");
+    lock.className="lock-icon";
+    lock.textContent=s.locked?"🔒":"🔓";
+    lock.onclick=e=>{e.stopPropagation();s.locked=!s.locked;updateStay(s.id,{locked:s.locked});render();};
+    b.appendChild(lock);
+  }
+
+  const name=document.createElement("span");
+  name.className="block-name";
+  name.textContent=s.name;
+  b.appendChild(name);
+
+  if(!s.locked){
+    b.onmousedown=startMove;
+    if(s.name!=="清掃"){
+      const r=document.createElement("div");
+      r.className="resize";
+      r.onmousedown=e=>startResize(e,s.id);
+      b.appendChild(r);
+    }
+  }
+
+  b.oncontextmenu=e=>{
+    e.preventDefault();
+    if(confirm("削除しますか？")) deleteStay(s.id);
+  };
+
+  blocksLayer.appendChild(b);
+ });
+}
+
+/* DRAG */
+let moving=null;
+function startMove(e){
+ if(e.target.classList.contains("resize")||e.target.classList.contains("lock-icon"))return;
+ const s=stays.find(x=>x.id==this.dataset.id);
+ moving={s,block:this,startX:e.clientX,startY:e.clientY,baseStart:s.start,baseRoom:s.room,duration:s.end-s.start,overTrash:false};
+ this.classList.add("dragging");
+ document.onmousemove=moveFrame;
+ document.onmouseup=snapMove;
+}
+function moveFrame(e){
+ const dx=Math.round((e.clientX-moving.startX)/CONFIG.HALF());
+ const dy=Math.round((e.clientY-moving.startY)/CONFIG.CELL_H);
+ moving.block.style.left=CONFIG.ROOM_W+(moving.baseStart+dx-1)*CONFIG.HALF()+"px";
+ moving.block.style.top=CONFIG.CELL_H*(moving.baseRoom+dy+1)+"px";
+ const rect=trash.getBoundingClientRect();
+ moving.overTrash=e.clientX>rect.left&&e.clientX<rect.right&&e.clientY>rect.top&&e.clientY<rect.bottom;
+ trash.classList.toggle("hover",moving.overTrash);
+}
+function snapMove(){
+ if(!moving)return;
+ const s=moving.s;
+ moving.block.classList.remove("dragging");
+ if(moving.overTrash){ deleteStay(s.id); moving=null; trash.classList.remove("hover"); return; }
+ s.start=Math.max(1,Math.round((parseInt(moving.block.style.left)-CONFIG.ROOM_W)/CONFIG.HALF())+1);
+ s.room=Math.max(0,Math.round((parseInt(moving.block.style.top)/CONFIG.CELL_H)-1));
+ s.end=(s.name==="清掃")?s.start:s.start+moving.duration;
+ moving=null;
+ updateStay(s.id,{start:s.start,end:s.end,room:s.room});
+}
+
+/* RESIZE */
+let resizing=null;
+function startResize(e,id){
+ resizing={id,startX:e.clientX,startW:document.querySelector(`.block[data-id="${id}"]`).offsetWidth};
+ document.onmousemove=resizeFrame;
+ document.onmouseup=snapResize;
+ e.stopPropagation();
+}
+function resizeFrame(e){
+ document.querySelector(`.block[data-id="${resizing.id}"]`).style.width=resizing.startW+(e.clientX-resizing.startX)+"px";
+}
+function snapResize(){
+ const b=document.querySelector(`.block[data-id="${resizing.id}"]`);
+ const s=stays.find(x=>x.id===resizing.id);
+ s.end=s.start+Math.round(b.offsetWidth/CONFIG.HALF())-1;
+ resizing=null;
+ updateStay(s.id,{end:s.end});
+}
+
+/* ADD */
+async function addBlock(){
+ const name=newName.value.trim();if(!name)return;
+ const ref=collection(db,"dormRooms",getMonthKey(),"stays");
+ await addDoc(ref,{name,room:0,start:1,end:2,color:newColor.value,locked:false});
+ newName.value="";
+}
+async function addCleaning(){
+ const ref=collection(db,"dormRooms",getMonthKey(),"stays");
+ await addDoc(ref,{name:"清掃",room:0,start:1,end:1,color:"#2563eb",locked:false});
+}
+
+/* RENT */
+function openRent(){calcRent();document.getElementById("rentModal").style.display="flex";}
+function closeRent(){document.getElementById("rentModal").style.display="none";}
+function calcRent(){
+ const price=parseInt(document.getElementById("rentPrice").value)||2500;
+ const map={};
+ stays.forEach(s=>{
+  if(s.name==="清掃")return;
+  const nights=(s.end-s.start+1)/2;
+  map[s.name]=(map[s.name]||0)+nights;
+ });
+ const tbody=document.querySelector("#rentTable tbody");
+ tbody.innerHTML="";
+ Object.entries(map).forEach(([n,d])=>{
+  const total=d*price;
+  tbody.insertAdjacentHTML("beforeend",`<tr><td>${n}</td><td>${d}</td><td>¥${total.toLocaleString()}</td></tr>`);
+ });
+}
+
+/* RENDER */
+function render(){renderGrid();syncLayer();renderBlocks();}
+function changeMonth(d){current.setMonth(current.getMonth()+d);updateMonthInfo();loadMonth();render();}
+
+/* INIT */
+updateMonthInfo();
+loadMonth();
+render();
+</script>
+
+</body>
+</html>
