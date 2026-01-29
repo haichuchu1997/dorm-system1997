@@ -26,12 +26,14 @@ body{
  color:var(--text);
  font-family:Inter,Segoe UI,system-ui;
 }
-h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 
+h2{font-size:22px;font-weight:900;margin-bottom:10px;}
+
+/* ================= PC TOOLBAR ================= */
 #toolbar{
  display:flex;gap:10px;align-items:center;
  padding:12px;background:#0c1324;border:1px solid var(--grid);
- border-radius:var(--radius);box-shadow:0 12px 40px rgba(0,0,0,.6);
+ border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.6);
 }
 #toolbar input,#toolbar select{
  background:#0a1222;color:white;border:1px solid var(--grid);
@@ -42,18 +44,26 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
  padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:800;
 }
 
+/* TRASH */
 #trash{
  margin-left:auto;padding:8px 16px;border:1px solid var(--danger);
  color:var(--danger);border-radius:12px;background:#0a1222;font-weight:900;
  transition:.2s;
 }
-#trash.hover{background:#ff4d4f;color:white;transform:scale(1.1);box-shadow:0 0 20px #ff4d4f;}
+#trash.hover{
+ background:#ff4d4f;color:white;
+ transform:scale(1.1);
+ box-shadow:0 0 20px #ff4d4f;
+}
 
+/* ================= CALENDAR ================= */
 #calendar-wrapper{
  margin-top:16px;background:#070a12;border:1px solid var(--grid);
  border-radius:16px;height:72vh;overflow:auto;position:relative;
 }
 .calendar{display:grid;grid-auto-rows:var(--cellH);}
+
+/* HEADER / ROOM */
 .header,.room{
  background:#0f172a;border-bottom:1px solid var(--grid);
  display:flex;align-items:center;justify-content:center;
@@ -66,9 +76,9 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 .header:first-child{position:sticky;left:0;z-index:6;}
 .cell{background:#070c18;border:1px solid rgba(255,255,255,.03);}
 
+/* BLOCK LAYER */
 #blocks-layer{
- position:absolute;
- top:0;left:0;
+ position:absolute;top:0;left:0;
  pointer-events:none;
  min-width:100%;
  z-index:50;
@@ -78,21 +88,19 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 .block{
  pointer-events:auto;
  position:absolute;
- height:36px;
- border-radius:14px;
- padding:0 12px;
- font-size:13px;
- font-weight:900;
- display:flex;
- align-items:center;
- color:white;
+ height:36px;border-radius:14px;padding:0 12px;
+ font-size:13px;font-weight:900;
+ display:flex;align-items:center;color:white;
  border:1px solid rgba(255,255,255,.1);
  background:linear-gradient(135deg,#dc2626,#f97316);
  box-shadow:0 10px 28px rgba(0,0,0,.7);
  transition:.15s;
  touch-action:none;
 }
-.block.dragging{box-shadow:0 0 0 2px #4f8cff,0 30px 80px rgba(79,140,255,.9);z-index:999;}
+.block.dragging{
+ box-shadow:0 0 0 2px #4f8cff,0 30px 80px rgba(79,140,255,.9);
+ z-index:999;
+}
 .block.locked{opacity:.6;background:#374151;cursor:not-allowed;}
 .block-name{flex:1;overflow:hidden;text-overflow:ellipsis;}
 .lock-icon{cursor:pointer;margin-right:8px;}
@@ -107,21 +115,59 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 .block.cleaning::before{
  content:"🧹 清掃";
  background:#1d4ed8;
- padding:2px 10px;
- border-radius:999px;
- margin-right:8px;
- font-size:12px;
+ padding:2px 10px;border-radius:999px;
+ margin-right:8px;font-size:12px;
 }
 .block.cleaning .block-name,
 .block.cleaning .resize,
 .block.cleaning .lock-icon{display:none;}
 
-/* MOBILE MODE */
+/* ================= MOBILE MODE ================= */
 @media (max-width:768px){
  #toolbar,#calendar-wrapper{display:none !important;}
  #mobileApp{display:block !important;}
+ body{padding:8px;}
 }
-#mobileApp{display:none;padding:10px;}
+
+/* ===== MOBILE APP ===== */
+#mobileApp{display:none;}
+.mobile-header{
+ display:flex;align-items:center;justify-content:space-between;
+ font-size:18px;font-weight:900;padding:10px;
+}
+.mobile-header button{
+ font-size:20px;background:#121c33;border:1px solid var(--grid);
+ padding:8px 12px;border-radius:12px;color:white;
+}
+
+/* add panel */
+.mobile-add{
+ background:#0c1324;border:1px solid var(--grid);
+ padding:10px;border-radius:16px;margin-bottom:10px;
+ display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+.mobile-add input,.mobile-add select,.mobile-add button{
+ font-size:16px;padding:12px;border-radius:12px;
+ background:#121c33;border:1px solid var(--grid);color:white;
+ grid-column:span 2;
+}
+
+/* rooms list */
+.mobile-room{
+ background:#0f172a;margin-bottom:12px;padding:12px;border-radius:16px;border:1px solid var(--grid);
+}
+.mobile-room h3{
+ margin:0 0 8px 0;font-size:18px;
+}
+.mobile-stay{
+ background:linear-gradient(135deg,#dc2626,#f97316);
+ padding:12px;border-radius:12px;margin-bottom:8px;
+ font-size:16px;display:flex;justify-content:space-between;align-items:center;
+}
+.mobile-clean{background:linear-gradient(135deg,#2563eb,#38bdf8);}
+.mobile-stay button{
+ background:#ff4d4f;border:none;padding:6px 10px;border-radius:8px;color:white;font-size:16px;
+}
 </style>
 </head>
 
@@ -129,6 +175,7 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 
 <h2>寮管理システム</h2>
 
+<!-- ================= PC UI ================= -->
 <div id="toolbar">
 <button onclick="changeMonth(-1)">←</button>
 <span id="monthLabel"></span>
@@ -152,13 +199,46 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 <div id="blocks-layer"></div>
 </div>
 
+<!-- ================= MOBILE UI ================= -->
 <div id="mobileApp">
-<h3 id="monthLabelMobile"></h3>
+
+<div class="mobile-header">
+<button onclick="changeMonth(-1)">←</button>
+<div id="monthLabelMobile"></div>
+<button onclick="changeMonth(1)">→</button>
+</div>
+
+<div class="mobile-add">
+<input id="newNameMobile" placeholder="名前">
+<select id="newColorMobile">
+<option value="linear-gradient(135deg,#dc2626,#f97316)">京都倶楽部</option>
+<option value="linear-gradient(135deg,#7c3aed,#ec4899)">人妻倶楽部</option>
+<option value="linear-gradient(135deg,#f59e0b,#facc15)">FIRST</option>
+</select>
+<button onclick="addBlockMobile()">＋ 入居追加</button>
+<button onclick="addCleaning()">🧹 清掃追加</button>
+<button onclick="openRent()">💰 寮費</button>
+</div>
+
 <div id="mobileRooms"></div>
 </div>
 
+<!-- RENT MODAL -->
+<div id="rentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
+<div style="background:#0c1324;padding:20px;border-radius:14px;border:1px solid var(--grid);width:90%;max-width:520px;">
+<h3>寮費回収一覧</h3>
+<input id="rentPrice" type="number" value="2500" style="width:100%;padding:8px;">
+<table id="rentTable" style="width:100%;border-collapse:collapse;margin-top:10px;">
+<thead><tr><th>名前</th><th>泊数</th><th>回収額</th></tr></thead>
+<tbody></tbody>
+</table>
+<button onclick="calcRent()">再計算</button>
+<button onclick="closeRent()">閉じる</button>
+</div>
+</div>
+
 <script>
-// FIREBASE
+// ================= FIREBASE =================
 const firebaseConfig={
  apiKey:"AIzaSyAktEtPenYgXw1Xl5oAf7faiLLL0vCX4B0",
  authDomain:"dcpdcp-3e87c.firebaseapp.com",
@@ -167,13 +247,15 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
-// GLOBAL
+// ================= GLOBAL =================
 const calendar=document.getElementById("calendar");
 const blocksLayer=document.getElementById("blocks-layer");
 const monthLabel=document.getElementById("monthLabel");
 const monthLabelMobile=document.getElementById("monthLabelMobile");
 const newName=document.getElementById("newName");
 const newColor=document.getElementById("newColor");
+const newNameMobile=document.getElementById("newNameMobile");
+const newColorMobile=document.getElementById("newColorMobile");
 const trash=document.getElementById("trash");
 const mobileRooms=document.getElementById("mobileRooms");
 
@@ -181,8 +263,40 @@ let current=new Date();
 const CONFIG={CELL_W:92,CELL_H:58,ROOM_W:200,DAYS:62,HALF:()=>CONFIG.CELL_W/2};
 let rooms=["P209","P306","P307","P507","FG406"];
 let stays=[];
+let monthData={};
 
-// MONTH
+// ================= REALTIME SYNC =================
+let isLocalUpdate=false;
+let unsubscribeRealtime=null;
+
+function startRealtime(){
+ if(unsubscribeRealtime)unsubscribeRealtime();
+ const key=getMonthKey();
+ unsubscribeRealtime=db.collection("dormMonths").doc(key)
+ .onSnapshot(doc=>{
+  if(!doc.exists||isLocalUpdate)return;
+  stays=doc.data().stays||[];
+  renderGrid();syncLayer();renderBlocks();renderMobile();
+ });
+}
+
+// ================= STORAGE =================
+function getMonthKey(){return current.getFullYear()+"-"+(current.getMonth()+1);}
+async function saveMonth(){
+ isLocalUpdate=true;
+ monthData[getMonthKey()]=JSON.parse(JSON.stringify(stays));
+ localStorage.setItem("dormMonthData",JSON.stringify(monthData));
+ await db.collection("dormMonths").doc(getMonthKey()).set({stays});
+ setTimeout(()=>isLocalUpdate=false,500);
+}
+async function loadMonth(){
+ monthData=JSON.parse(localStorage.getItem("dormMonthData")||"{}");
+ stays=monthData[getMonthKey()]||[];
+ const doc=await db.collection("dormMonths").doc(getMonthKey()).get();
+ if(doc.exists)stays=doc.data().stays||stays;
+}
+
+// ================= MONTH =================
 function updateMonthInfo(){
  const y=current.getFullYear(),m=current.getMonth();
  CONFIG.DAYS=new Date(y,m+1,0).getDate()*2;
@@ -190,7 +304,7 @@ function updateMonthInfo(){
  monthLabelMobile.textContent=`${y}年 ${m+1}月`;
 }
 
-// GRID
+// ================= GRID =================
 function createCell(c,t=""){const d=document.createElement("div");d.className=c;d.textContent=t;return d;}
 function renderGrid(){
  calendar.innerHTML="";
@@ -204,75 +318,91 @@ function renderGrid(){
   for(let i=0;i<CONFIG.DAYS;i++)calendar.append(createCell("cell"));
  });
 }
-function syncLayer(){
- blocksLayer.style.width=calendar.scrollWidth+"px";
- blocksLayer.style.height=calendar.scrollHeight+"px";
-}
+function syncLayer(){blocksLayer.style.width=calendar.scrollWidth+"px";blocksLayer.style.height=calendar.scrollHeight+"px";}
 
-// POSITION
+// ================= BLOCK POSITION =================
 function setBlockPosition(el,s){
  const w=(s.end-s.start+1)*CONFIG.HALF();
  const x=CONFIG.ROOM_W+(s.start-1)*CONFIG.HALF();
  const y=CONFIG.CELL_H*(s.room+1)+(CONFIG.CELL_H-36)/2;
- el.style.left=x+"px";
- el.style.top=y+"px";
- el.style.width=w+"px";
+ el.style.left=x+"px";el.style.top=y+"px";el.style.width=w+"px";
  el.style.background=s.color;
 }
 
-// RENDER BLOCKS
+// ================= RENDER BLOCKS =================
 function renderBlocks(){
  blocksLayer.innerHTML="";
  stays.forEach(s=>{
   const b=document.createElement("div");
   b.className="block";
+  if(s.locked)b.classList.add("locked");
   if(s.name==="清掃")b.classList.add("cleaning");
   b.dataset.id=s.id;
   setBlockPosition(b,s);
 
+  if(s.name!=="清掃"){
+    const lock=document.createElement("span");
+    lock.className="lock-icon";
+    lock.textContent=s.locked?"🔒":"🔓";
+    lock.onclick=e=>{e.stopPropagation();s.locked=!s.locked;render();};
+    b.appendChild(lock);
+  }
+
   const name=document.createElement("span");
-  name.className="block-name";
-  name.textContent=s.name;
+  name.className="block-name";name.textContent=s.name;
   b.appendChild(name);
 
-  b.onmousedown=startMove;
-  b.ontouchstart=touchStartMove;
-
+  if(!s.locked){
+    b.onmousedown=startMove;
+    b.ontouchstart=touchStartMove;
+    if(s.name!=="清掃"){
+      const r=document.createElement("div");
+      r.className="resize";
+      r.onmousedown=e=>startResize(e,s.id);
+      r.ontouchstart=e=>touchStartResize(e,s.id);
+      b.appendChild(r);
+    }
+  }
   blocksLayer.appendChild(b);
  });
 }
 
-// ===== DRAG PC =====
-let moving=null;
+// ================= DRAG & RESIZE (PC+TOUCH) =================
+let moving=null,touchMoving=null,resizing=null,touchResizing=null;
+
+// PC drag
 function startMove(e){
+ if(e.target.classList.contains("resize")||e.target.classList.contains("lock-icon"))return;
  const s=stays.find(x=>x.id==this.dataset.id);
- moving={s,block:this,startX:e.clientX,startY:e.clientY,baseStart:s.start,baseRoom:s.room,duration:s.end-s.start};
- document.onmousemove=moveFrame;
- document.onmouseup=snapMove;
+ moving={s,block:this,startX:e.clientX,startY:e.clientY,baseStart:s.start,baseRoom:s.room,duration:s.end-s.start,overTrash:false};
+ this.classList.add("dragging");
+ document.onmousemove=moveFrame;document.onmouseup=snapMove;
 }
 function moveFrame(e){
  const dx=Math.round((e.clientX-moving.startX)/CONFIG.HALF());
  const dy=Math.round((e.clientY-moving.startY)/CONFIG.CELL_H);
  moving.block.style.left=CONFIG.ROOM_W+(moving.baseStart+dx-1)*CONFIG.HALF()+"px";
  moving.block.style.top=CONFIG.CELL_H*(moving.baseRoom+dy+1)+"px";
+ const r=trash.getBoundingClientRect();
+ moving.overTrash=e.clientX>r.left&&e.clientX<r.right&&e.clientY>r.top&&e.clientY<r.bottom;
+ trash.classList.toggle("hover",moving.overTrash);
 }
 function snapMove(){
+ if(!moving)return;
  const s=moving.s;
+ if(moving.overTrash){stays=stays.filter(x=>x.id!==s.id);moving=null;render();return;}
  s.start=Math.max(1,Math.round((parseInt(moving.block.style.left)-CONFIG.ROOM_W)/CONFIG.HALF())+1);
  s.room=Math.max(0,Math.round((parseInt(moving.block.style.top)/CONFIG.CELL_H)-1));
  s.end=s.start+moving.duration;
- moving=null;
- render();
+ moving=null;render();
 }
 
-// ===== TOUCH DRAG =====
-let touchMoving=null;
+// touch drag
 function touchStartMove(e){
- const t=e.touches[0];
- const s=stays.find(x=>x.id==this.dataset.id);
+ const t=e.touches[0];const s=stays.find(x=>x.id==this.dataset.id);
  touchMoving={s,block:this,startX:t.clientX,startY:t.clientY,baseStart:s.start,baseRoom:s.room,duration:s.end-s.start};
- document.ontouchmove=touchMoveFrame;
- document.ontouchend=touchSnapMove;
+ this.classList.add("dragging");
+ document.ontouchmove=touchMoveFrame;document.ontouchend=touchSnapMove;
 }
 function touchMoveFrame(e){
  const t=e.touches[0];
@@ -287,30 +417,115 @@ function touchSnapMove(){
  s.start=Math.max(1,Math.round((parseInt(touchMoving.block.style.left)-CONFIG.ROOM_W)/CONFIG.HALF())+1);
  s.room=Math.max(0,Math.round((parseInt(touchMoving.block.style.top)/CONFIG.CELL_H)-1));
  s.end=s.start+touchMoving.duration;
- touchMoving=null;
- render();
+ touchMoving=null;render();
 }
 
-// ADD
+// resize pc
+function startResize(e,id){
+ resizing={id,startX:e.clientX,startW:document.querySelector(`.block[data-id="${id}"]`).offsetWidth};
+ document.onmousemove=resizeFrame;document.onmouseup=snapResize;e.stopPropagation();
+}
+function resizeFrame(e){
+ document.querySelector(`.block[data-id="${resizing.id}"]`).style.width=resizing.startW+(e.clientX-resizing.startX)+"px";
+}
+function snapResize(){
+ const b=document.querySelector(`.block[data-id="${resizing.id}"]`);
+ const s=stays.find(x=>x.id===resizing.id);
+ s.end=s.start+Math.round(b.offsetWidth/CONFIG.HALF())-1;
+ resizing=null;render();
+}
+
+// resize touch
+function touchStartResize(e,id){
+ const t=e.touches[0];
+ touchResizing={id,startX:t.clientX,startW:document.querySelector(`.block[data-id="${id}"]`).offsetWidth};
+ document.ontouchmove=touchResizeFrame;document.ontouchend=touchSnapResize;
+}
+function touchResizeFrame(e){
+ const t=e.touches[0];
+ document.querySelector(`.block[data-id="${touchResizing.id}"]`).style.width=touchResizing.startW+(t.clientX-touchResizing.startX)+"px";
+ e.preventDefault();
+}
+function touchSnapResize(){
+ const b=document.querySelector(`.block[data-id="${touchResizing.id}"]`);
+ const s=stays.find(x=>x.id===touchResizing.id);
+ s.end=s.start+Math.round(b.offsetWidth/CONFIG.HALF())-1;
+ touchResizing=null;render();
+}
+
+// ================= MOBILE LIST UI =================
+function renderMobile(){
+ mobileRooms.innerHTML="";
+ rooms.forEach((r,ri)=>{
+  const div=document.createElement("div");
+  div.className="mobile-room";
+  div.innerHTML=`<h3>${r}</h3>`;
+  stays.filter(s=>s.room==ri).forEach(s=>{
+    const d=document.createElement("div");
+    d.className="mobile-stay"+(s.name==="清掃"?" mobile-clean":"");
+    d.innerHTML=`${s.name} (${(s.end-s.start+1)/2}泊) <button onclick="deleteStay(${s.id})">🗑</button>`;
+    div.appendChild(d);
+  });
+  mobileRooms.appendChild(div);
+ });
+}
+function deleteStay(id){stays=stays.filter(s=>s.id!=id);render();}
+
+// ================= ADD =================
 function addBlock(){
- stays.push({id:Date.now(),name:"入居者",room:0,start:1,end:2,color:"linear-gradient(135deg,#dc2626,#f97316)"});
- render();
+ const name=newName.value.trim();if(!name)return;
+ stays.push({id:Date.now(),name,room:0,start:1,end:2,color:newColor.value,locked:false});
+ newName.value="";render();
+}
+function addBlockMobile(){
+ const name=newNameMobile.value.trim();if(!name)return;
+ stays.push({id:Date.now(),name,room:0,start:1,end:2,color:newColorMobile.value,locked:false});
+ newNameMobile.value="";render();
 }
 function addCleaning(){
- stays.push({id:Date.now(),name:"清掃",room:0,start:1,end:1,color:"#2563eb"});
+ stays.push({id:Date.now(),name:"清掃",room:0,start:1,end:1,color:"#2563eb",locked:false});
  render();
 }
 
-// RENDER
-function render(){
- renderGrid();
- syncLayer();
- renderBlocks();
+// ================= RENT =================
+function openRent(){calcRent();document.getElementById("rentModal").style.display="flex";}
+function closeRent(){document.getElementById("rentModal").style.display="none";}
+function calcRent(){
+ const price=parseInt(document.getElementById("rentPrice").value)||2500;
+ const map={};
+ stays.forEach(s=>{
+  if(s.name==="清掃")return;
+  const nights=(s.end-s.start+1)/2;
+  map[s.name]=(map[s.name]||0)+nights;
+ });
+ const tbody=document.querySelector("#rentTable tbody");
+ tbody.innerHTML="";
+ Object.entries(map).forEach(([n,d])=>{
+  tbody.insertAdjacentHTML("beforeend",`<tr><td>${n}</td><td>${d}</td><td>¥${(d*price).toLocaleString()}</td></tr>`);
+ });
+}
+
+// ================= RENDER =================
+async function render(){
+ renderGrid();syncLayer();renderBlocks();renderMobile();
+ await saveMonth();
+}
+async function changeMonth(d){
+ await saveMonth();
+ current.setMonth(current.getMonth()+d);
+ updateMonthInfo();
+ await loadMonth();
+ startRealtime();
+ render();
 }
 
 // INIT
-updateMonthInfo();
-render();
+(async ()=>{
+ updateMonthInfo();
+ await loadMonth();
+ startRealtime();
+ render();
+})();
 </script>
 
 </body>
