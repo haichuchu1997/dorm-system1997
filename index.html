@@ -26,198 +26,112 @@ body{
  color:var(--text);
  font-family:Inter,Segoe UI,system-ui;
 }
-
 h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 
-/* TOOLBAR */
 #toolbar{
  display:flex;gap:10px;align-items:center;
- padding:12px;
- background:#0c1324;
- border:1px solid var(--grid);
- border-radius:var(--radius);
- box-shadow:0 12px 40px rgba(0,0,0,.6);
+ padding:12px;background:#0c1324;border:1px solid var(--grid);
+ border-radius:var(--radius);box-shadow:0 12px 40px rgba(0,0,0,.6);
 }
 #toolbar input,#toolbar select{
- background:#0a1222;color:white;
- border:1px solid var(--grid);
+ background:#0a1222;color:white;border:1px solid var(--grid);
  padding:8px;border-radius:10px;
 }
 #toolbar button{
- background:#121c33;color:white;
- border:1px solid var(--grid);
- padding:8px 14px;border-radius:10px;
- cursor:pointer;font-weight:800;
+ background:#121c33;color:white;border:1px solid var(--grid);
+ padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:800;
 }
-#toolbar button:hover{background:#1b2a4d;border-color:#4f8cff;}
 
-/* TRASH */
 #trash{
- margin-left:auto;padding:8px 16px;
- border:1px solid var(--danger);
- color:var(--danger);
- border-radius:12px;
- background:#0a1222;font-weight:900;
+ margin-left:auto;padding:8px 16px;border:1px solid var(--danger);
+ color:var(--danger);border-radius:12px;background:#0a1222;font-weight:900;
  transition:.2s;
 }
-#trash.hover{
- background:#ff4d4f;color:white;
- transform:scale(1.1);
- box-shadow:0 0 20px #ff4d4f;
-}
+#trash.hover{background:#ff4d4f;color:white;transform:scale(1.1);box-shadow:0 0 20px #ff4d4f;}
 
-/* CALENDAR */
 #calendar-wrapper{
- margin-top:16px;
- background:#070a12;
- border:1px solid var(--grid);
- border-radius:16px;
- height:72vh;overflow:auto;
- position:relative;
+ margin-top:16px;background:#070a12;border:1px solid var(--grid);
+ border-radius:16px;height:72vh;overflow:auto;position:relative;
 }
 .calendar{display:grid;grid-auto-rows:var(--cellH);}
-
-/* HEADER / ROOM */
 .header,.room{
- background:#0f172a;
- border-bottom:1px solid var(--grid);
+ background:#0f172a;border-bottom:1px solid var(--grid);
  display:flex;align-items:center;justify-content:center;
  font-weight:800;font-size:13px;color:var(--muted);
 }
 .room{
- justify-content:flex-start;padding-left:12px;
- border-right:1px solid var(--grid);
+ justify-content:flex-start;padding-left:12px;border-right:1px solid var(--grid);
  color:white;position:sticky;left:0;z-index:5;
 }
 .header:first-child{position:sticky;left:0;z-index:6;}
-
-/* CELL */
 .cell{background:#070c18;border:1px solid rgba(255,255,255,.03);}
 
-/* BLOCK LAYER */
-#blocks-layer{
- position:absolute;top:0;left:0;
- pointer-events:none;
- min-width:100%;
-}
+#blocks-layer{position:absolute;top:0;left:0;pointer-events:none;min-width:100%;}
 
 /* 入居枠 */
 .block{
- pointer-events:auto;
- position:absolute;
- height:36px;
- border-radius:14px;
- padding:0 12px;
- font-size:13px;font-weight:900;
- display:flex;align-items:center;
- color:white;
+ pointer-events:auto;position:absolute;height:36px;border-radius:14px;
+ padding:0 12px;font-size:13px;font-weight:900;
+ display:flex;align-items:center;color:white;
  border:1px solid rgba(255,255,255,.1);
  background:linear-gradient(135deg,#dc2626,#f97316);
- box-shadow:0 10px 28px rgba(0,0,0,.7);
- transition:.15s;
+ box-shadow:0 10px 28px rgba(0,0,0,.7);transition:.15s;
 }
-.block:hover{transform:translateY(-2px) scale(1.02);}
+.block.dragging{box-shadow:0 0 0 2px #4f8cff,0 30px 80px rgba(79,140,255,.9);z-index:999;}
+.block.locked{opacity:.6;background:#374151;cursor:not-allowed;}
 .block-name{flex:1;overflow:hidden;text-overflow:ellipsis;}
 .lock-icon{cursor:pointer;margin-right:8px;}
 .resize{width:16px;position:absolute;right:0;top:0;bottom:0;cursor:ew-resize;}
 .resize::after{content:"";position:absolute;right:6px;top:6px;bottom:6px;width:2px;background:white;}
-.block.dragging{box-shadow:0 0 0 2px #4f8cff,0 30px 80px rgba(79,140,255,.9);z-index:999;}
-.block.locked{opacity:.6;background:#374151;cursor:not-allowed;}
 
 /* 清掃 */
 .block.cleaning{
  background:linear-gradient(135deg,#2563eb,#38bdf8);
  border:2px solid #3b82f6;
- color:white;
 }
 .block.cleaning::before{
- content:"🧹 清掃";
- background:#1d4ed8;color:white;
- padding:2px 10px;border-radius:999px;
+ content:"🧹 清掃";background:#1d4ed8;padding:2px 10px;border-radius:999px;
  margin-right:8px;font-size:12px;
 }
-.block.cleaning .block-name{display:none;}
-.block.cleaning .resize{display:none;}
+.block.cleaning .block-name,
+.block.cleaning .resize,
 .block.cleaning .lock-icon{display:none;}
 
-/* RENT MODAL */
+/* RENT */
 .modal-overlay{
- position:fixed;inset:0;
- background:rgba(0,0,0,.7);
- display:none;align-items:center;justify-content:center;
- z-index:9999;
+ position:fixed;inset:0;background:rgba(0,0,0,.7);
+ display:none;align-items:center;justify-content:center;z-index:9999;
 }
 .modal{
- background:#0c1324;
- padding:20px;border-radius:14px;
- border:1px solid var(--grid);
+ background:#0c1324;padding:20px;border-radius:14px;border:1px solid var(--grid);
  width:520px;color:white;
 }
 #rentTable{width:100%;border-collapse:collapse;margin-top:10px;}
 #rentTable th,#rentTable td{padding:8px;border-bottom:1px solid var(--grid);}
 #rentTable td:nth-child(3){text-align:right;font-weight:900;color:#00e5ff;}
 
-/* ================= MOBILE MODE ================= */
+/* ===== MOBILE MODE ===== */
 @media (max-width:768px){
-
-/* PC画面非表示 */
-#toolbar,#calendar-wrapper{display:none !important;}
-
-/* モバイル専用UI */
-#mobileApp{
- display:block !important;
+ #toolbar,#calendar-wrapper{display:none !important;}
+ #mobileApp{display:block !important;}
 }
-
-/* モバイルUI */
-#mobileApp{
- padding:10px;
-}
-
+#mobileApp{display:none;padding:10px;}
 .mobile-toolbar{
- display:flex;
- flex-wrap:wrap;
- gap:8px;
+ display:flex;flex-wrap:wrap;gap:8px;
 }
-
-.mobile-toolbar button,
-.mobile-toolbar input,
-.mobile-toolbar select{
- padding:14px;
- font-size:16px;
- border-radius:14px;
- background:#121c33;
- border:1px solid var(--grid);
- color:white;
+.mobile-toolbar button,input,select{
+ padding:14px;font-size:16px;border-radius:14px;
+ background:#121c33;border:1px solid var(--grid);color:white;
 }
-
 .mobile-room{
- background:#0f172a;
- margin-bottom:10px;
- padding:12px;
- border-radius:14px;
- border:1px solid var(--grid);
+ background:#0f172a;margin-bottom:10px;padding:12px;border-radius:14px;border:1px solid var(--grid);
 }
-
-.mobile-room h3{
- margin:0 0 8px 0;
- font-size:18px;
-}
-
 .mobile-stay{
  background:linear-gradient(135deg,#dc2626,#f97316);
- padding:10px;
- border-radius:12px;
- margin-bottom:6px;
- font-size:16px;
- display:flex;
- justify-content:space-between;
- align-items:center;
+ padding:10px;border-radius:12px;margin-bottom:6px;font-size:16px;
+ display:flex;justify-content:space-between;align-items:center;
 }
-
-.mobile-clean{
- background:linear-gradient(135deg,#2563eb,#38bdf8);
-}
-}
+.mobile-clean{background:linear-gradient(135deg,#2563eb,#38bdf8);}
 </style>
 </head>
 
@@ -244,18 +158,17 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 <div id="trash">🗑 削除</div>
 </div>
 
-<!-- PC CALENDAR -->
 <div id="calendar-wrapper">
 <div id="calendar" class="calendar"></div>
 <div id="blocks-layer"></div>
 </div>
 
 <!-- MOBILE UI -->
-<div id="mobileApp" style="display:none;">
+<div id="mobileApp">
 <div class="mobile-toolbar">
-<button onclick="changeMonth(-1)">← 月</button>
+<button onclick="changeMonth(-1)">←</button>
 <span id="monthLabelMobile"></span>
-<button onclick="changeMonth(1)">月 →</button>
+<button onclick="changeMonth(1)">→</button>
 <input id="newNameMobile" placeholder="名前">
 <select id="newColorMobile">
 <option value="linear-gradient(135deg,#dc2626,#f97316)">京都倶楽部</option>
@@ -266,7 +179,6 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 <button onclick="addCleaning()">清掃</button>
 <button onclick="openRent()">💰 寮費</button>
 </div>
-
 <div id="mobileRooms"></div>
 </div>
 
@@ -274,7 +186,6 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 <div id="rentModal" class="modal-overlay">
 <div class="modal">
 <h3>寮費回収一覧</h3>
-<label>1泊料金：</label>
 <input id="rentPrice" type="number" value="2500">
 <table id="rentTable">
 <thead><tr><th>名前</th><th>泊数</th><th>回収額</th></tr></thead>
@@ -287,18 +198,15 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 
 <script>
 // FIREBASE
-const firebaseConfig = {
+const firebaseConfig={
  apiKey:"AIzaSyAktEtPenYgXw1Xl5oAf7faiLLL0vCX4B0",
  authDomain:"dcpdcp-3e87c.firebaseapp.com",
- projectId:"dcpdcp-3e87c",
- storageBucket:"dcpdcp-3e87c.firebasestorage.app",
- messagingSenderId:"182411963471",
- appId:"1:182411963471:web:341de9698996208f240e3a"
+ projectId:"dcpdcp-3e87c"
 };
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
-// DATA
+// GLOBAL
 const calendar=document.getElementById("calendar");
 const blocksLayer=document.getElementById("blocks-layer");
 const monthLabel=document.getElementById("monthLabel");
@@ -307,6 +215,7 @@ const newName=document.getElementById("newName");
 const newColor=document.getElementById("newColor");
 const newNameMobile=document.getElementById("newNameMobile");
 const newColorMobile=document.getElementById("newColorMobile");
+const trash=document.getElementById("trash");
 const mobileRooms=document.getElementById("mobileRooms");
 
 let current=new Date();
@@ -337,7 +246,7 @@ function updateMonthInfo(){
  monthLabelMobile.textContent=`${y}年 ${m+1}月`;
 }
 
-// PC GRID (unchanged)
+// GRID
 function createCell(c,t=""){const d=document.createElement("div");d.className=c;d.textContent=t;return d;}
 function renderGrid(){
  calendar.innerHTML="";
@@ -353,7 +262,7 @@ function renderGrid(){
 }
 function syncLayer(){blocksLayer.style.width=calendar.scrollWidth+"px";blocksLayer.style.height=calendar.scrollHeight+"px";}
 
-// BLOCK POSITION
+// POSITION
 function setBlockPosition(el,s){
  const w=(s.end-s.start+1)*CONFIG.HALF();
  const x=CONFIG.ROOM_W+(s.start-1)*CONFIG.HALF();
@@ -362,7 +271,7 @@ function setBlockPosition(el,s){
  el.style.background=s.color;
 }
 
-// PC BLOCKS
+// RENDER BLOCKS
 function renderBlocks(){
  blocksLayer.innerHTML="";
  stays.forEach(s=>{
@@ -395,19 +304,59 @@ function renderBlocks(){
     }
   }
 
-  b.oncontextmenu=e=>{
-    e.preventDefault();
-    if(confirm("削除しますか？")){
-      stays=stays.filter(x=>x.id!=s.id);
-      render();
-    }
-  };
-
   blocksLayer.appendChild(b);
  });
 }
 
-// MOBILE LIST VIEW
+// DRAG MOVE
+let moving=null;
+function startMove(e){
+ if(e.target.classList.contains("resize")||e.target.classList.contains("lock-icon"))return;
+ const s=stays.find(x=>x.id==this.dataset.id);
+ moving={s,block:this,startX:e.clientX,startY:e.clientY,baseStart:s.start,baseRoom:s.room,duration:s.end-s.start,overTrash:false};
+ this.classList.add("dragging");
+ document.onmousemove=moveFrame;
+ document.onmouseup=snapMove;
+}
+function moveFrame(e){
+ const dx=Math.round((e.clientX-moving.startX)/CONFIG.HALF());
+ const dy=Math.round((e.clientY-moving.startY)/CONFIG.CELL_H);
+ moving.block.style.left=CONFIG.ROOM_W+(moving.baseStart+dx-1)*CONFIG.HALF()+"px";
+ moving.block.style.top=CONFIG.CELL_H*(moving.baseRoom+dy+1)+"px";
+ const rect=trash.getBoundingClientRect();
+ moving.overTrash=e.clientX>rect.left&&e.clientX<rect.right&&e.clientY>rect.top&&e.clientY<rect.bottom;
+ trash.classList.toggle("hover",moving.overTrash);
+}
+function snapMove(){
+ if(!moving)return;
+ const s=moving.s;
+ if(moving.overTrash){
+  stays=stays.filter(x=>x.id!==s.id);
+  moving=null;trash.classList.remove("hover");render();return;
+ }
+ s.start=Math.max(1,Math.round((parseInt(moving.block.style.left)-CONFIG.ROOM_W)/CONFIG.HALF())+1);
+ s.room=Math.max(0,Math.round((parseInt(moving.block.style.top)/CONFIG.CELL_H)-1));
+ s.end=(s.name==="清掃")?s.start:s.start+moving.duration;
+ moving=null;render();
+}
+
+// RESIZE
+let resizing=null;
+function startResize(e,id){
+ resizing={id,startX:e.clientX,startW:document.querySelector(`.block[data-id="${id}"]`).offsetWidth};
+ document.onmousemove=resizeFrame;document.onmouseup=snapResize;e.stopPropagation();
+}
+function resizeFrame(e){
+ document.querySelector(`.block[data-id="${resizing.id}"]`).style.width=resizing.startW+(e.clientX-resizing.startX)+"px";
+}
+function snapResize(){
+ const b=document.querySelector(`.block[data-id="${resizing.id}"]`);
+ const s=stays.find(x=>x.id===resizing.id);
+ s.end=s.start+Math.round(b.offsetWidth/CONFIG.HALF())-1;
+ resizing=null;render();
+}
+
+// MOBILE LIST
 function renderMobile(){
  mobileRooms.innerHTML="";
  rooms.forEach((r,ri)=>{
@@ -424,28 +373,7 @@ function renderMobile(){
   mobileRooms.appendChild(div);
  });
 }
-
-function deleteStay(id){
- stays=stays.filter(s=>s.id!=id);
- render();
-}
-
-// DRAG (PC ONLY unchanged)
-let moving=null;
-function startMove(e){
- if(e.target.classList.contains("resize")||e.target.classList.contains("lock-icon"))return;
- const s=stays.find(x=>x.id==this.dataset.id);
- moving={s,block:this,startX:e.clientX,startY:e.clientY,baseStart:s.start,baseRoom:s.room,duration:s.end-s.start,overTrash:false};
- this.classList.add("dragging");
- document.onmousemove=moveFrame;
- document.onmouseup=snapMove;
-}
-function moveFrame(e){}
-function snapMove(){}
-
-// RESIZE
-let resizing=null;
-function startResize(e,id){}
+function deleteStay(id){stays=stays.filter(s=>s.id!=id);render();}
 
 // ADD
 function addBlock(){
