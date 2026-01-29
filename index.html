@@ -225,7 +225,6 @@ header{
 </div>
 
 <script type="module">
-// ================= Firebase =================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -242,19 +241,17 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ================= Core System =================
+// ===== Core =====
 const roomNames=["P209","P306","P307","P507","FG406","空室待ち1","空室待ち2","空室待ち3","空室待ち4","空室待ち5"];
 const rooms=roomNames.length;
 const cellHeight=28,colWidth=80,headerHeight=28;
-
 const scroll=document.getElementById("scroll");
 const grid=document.getElementById("grid");
 const monthPicker=document.getElementById("monthPicker");
-
 const today=new Date();
 monthPicker.value=today.toISOString().slice(0,7);
 
-// Grid
+// ===== Grid =====
 function buildGrid(y,m){
   grid.innerHTML="";
   const lastDay=new Date(y,m,0).getDate();
@@ -268,22 +265,30 @@ function buildGrid(y,m){
   }
 }
 
-// Firestore
+// ===== Realtime Loop Fix =====
+let isLocalUpdate=false;
 function getDocRef(){return doc(db,"dormitory",monthPicker.value);}
 
 async function saveMonthData(){
+  if(isLocalUpdate) return;
+  isLocalUpdate=true;
+
   const data=[...document.querySelectorAll(".bar")].map(b=>({
     name:b.childNodes[0].nodeValue.trim(),
     room:b.dataset.room,start:b.dataset.start,end:b.dataset.end,
     color:[...b.classList].find(c=>["red","blue","yellow"].includes(c))
   }));
+
   await setDoc(getDocRef(),{data});
+  setTimeout(()=>isLocalUpdate=false,300);
 }
 
 function listenRealtime(){
   onSnapshot(getDocRef(),snap=>{
-    if(!snap.exists()) return;
+    if(isLocalUpdate || !snap.exists()) return;
+
     document.querySelectorAll(".bar").forEach(b=>b.remove());
+
     snap.data().data.forEach(d=>{
       const bar=document.createElement("div");
       bar.className="bar "+d.color;
@@ -292,11 +297,12 @@ function listenRealtime(){
       placeBar(bar,d.room,d.start,d.end);
       makeDraggable(bar);
     });
+
     autoCalc();
   });
 }
 
-// Place Bar
+// ===== Bar =====
 function placeBar(bar,room,start,end){
   bar.dataset.room=room;
   bar.dataset.start=start;
@@ -307,7 +313,7 @@ function placeBar(bar,room,start,end){
   saveMonthData();
 }
 
-// ================= SMART MOBILE DRAG & RESIZE =================
+// ===== Drag + Resize (Mobile Optimized) =====
 function makeDraggable(bar){
   let sx,sy,sl,st,resize=null;
 
@@ -316,31 +322,25 @@ function makeDraggable(bar){
            e.target.classList.contains("bottom")?"bottom":null;
     bar.setPointerCapture(e.pointerId);
     sx=e.clientX; sy=e.clientY;
-    sl=parseInt(bar.style.left);
-    st=parseInt(bar.style.top);
+    sl=parseInt(bar.style.left); st=parseInt(bar.style.top);
   });
 
   bar.addEventListener("pointermove",e=>{
     if(sx==null)return;
-    const dy=e.clientY-sy;
-    const dx=e.clientX-sx;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
 
-    // Resize TOP
     if(resize==="top"){
-      let nt=st+dy;
       let nh=parseInt(bar.style.height)-dy;
       if(nh<cellHeight*2)return;
-      bar.style.top=nt+"px";
+      bar.style.top=st+dy+"px";
       bar.style.height=nh+"px";
     }
-    // Resize BOTTOM
     else if(resize==="bottom"){
       let nh=parseInt(bar.style.height)+dy;
       if(nh<cellHeight*2)return;
       bar.style.height=nh+"px";
       sy=e.clientY;
     }
-    // Move
     else{
       bar.style.left=sl+dx+"px";
       bar.style.top=st+dy+"px";
@@ -350,13 +350,10 @@ function makeDraggable(bar){
   bar.addEventListener("pointerup",()=>{
     sx=null;
 
-    let top=parseInt(bar.style.top);
-    let left=parseInt(bar.style.left);
-    let height=parseInt(bar.style.height);
-
+    let top=parseInt(bar.style.top), left=parseInt(bar.style.left), h=parseInt(bar.style.height);
     let s=Math.round((top-headerHeight)/cellHeight)+1;
-    let h=Math.round(height/cellHeight);
-    let e=s+h-1;
+    let rows=Math.round(h/cellHeight);
+    let e=s+rows-1;
     let r=Math.round((left-60)/colWidth)+1;
 
     s=Math.max(1,Math.min(totalRows-1,s));
@@ -367,7 +364,7 @@ function makeDraggable(bar){
   });
 }
 
-// Add
+// ===== Add =====
 let selectedColor="red";
 document.querySelectorAll(".colorPick div").forEach(c=>c.onclick=()=>selectedColor=c.dataset.color);
 enterBtn.onclick=()=>modalBg.style.display="flex";
@@ -384,7 +381,7 @@ addBtn.onclick=()=>{
   nameInput.value="";
 };
 
-// Fee
+// ===== Fee =====
 const priceInput=document.getElementById("priceInput");
 const feeList=document.getElementById("feeList");
 let pricePerNight=2500;
@@ -403,7 +400,7 @@ function autoCalc(){
   for(const n in map) feeList.innerHTML+=`${n}：${map[n].toLocaleString()} 円<br>`;
 }
 
-// 空室待ち
+// ===== 空室待ち =====
 todayWaitBtn.onclick=()=>{
   waitList.innerHTML="";
   const now=new Date();
@@ -417,7 +414,7 @@ todayWaitBtn.onclick=()=>{
   waitModal.style.display="flex";
 };
 
-// Month change
+// ===== Month Change =====
 monthPicker.onchange=()=>{
   const [y,m]=monthPicker.value.split("-");
   buildGrid(y,Number(m));
