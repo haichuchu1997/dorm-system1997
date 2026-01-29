@@ -76,6 +76,7 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
  border:1px solid rgba(255,255,255,.1);
  background:linear-gradient(135deg,#dc2626,#f97316);
  box-shadow:0 10px 28px rgba(0,0,0,.7);transition:.15s;
+ touch-action:none;
 }
 .block.dragging{box-shadow:0 0 0 2px #4f8cff,0 30px 80px rgba(79,140,255,.9);z-index:999;}
 .block.locked{opacity:.6;background:#374151;cursor:not-allowed;}
@@ -139,7 +140,6 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 
 <h2>寮管理システム</h2>
 
-<!-- PC TOOLBAR -->
 <div id="toolbar">
 <button onclick="changeMonth(-1)">←</button>
 <span id="monthLabel"></span>
@@ -163,7 +163,6 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 <div id="blocks-layer"></div>
 </div>
 
-<!-- MOBILE UI -->
 <div id="mobileApp">
 <div class="mobile-toolbar">
 <button onclick="changeMonth(-1)">←</button>
@@ -182,7 +181,6 @@ h2{font-size:24px;font-weight:900;margin-bottom:14px;}
 <div id="mobileRooms"></div>
 </div>
 
-<!-- RENT MODAL -->
 <div id="rentModal" class="modal-overlay">
 <div class="modal">
 <h3>寮費回収一覧</h3>
@@ -296,10 +294,13 @@ function renderBlocks(){
 
   if(!s.locked){
     b.onmousedown=startMove;
+    b.ontouchstart=touchStartMove;
+
     if(s.name!=="清掃"){
       const r=document.createElement("div");
       r.className="resize";
       r.onmousedown=e=>startResize(e,s.id);
+      r.ontouchstart=e=>touchStartResize(e,s.id);
       b.appendChild(r);
     }
   }
@@ -308,7 +309,7 @@ function renderBlocks(){
  });
 }
 
-// DRAG MOVE
+// PC DRAG
 let moving=null;
 function startMove(e){
  if(e.target.classList.contains("resize")||e.target.classList.contains("lock-icon"))return;
@@ -340,7 +341,42 @@ function snapMove(){
  moving=null;render();
 }
 
-// RESIZE
+// TOUCH DRAG
+let touchMoving=null;
+function touchStartMove(e){
+ if(e.target.classList.contains("resize")||e.target.classList.contains("lock-icon"))return;
+ const t=e.touches[0];
+ const s=stays.find(x=>x.id==this.dataset.id);
+ touchMoving={s,block:this,startX:t.clientX,startY:t.clientY,baseStart:s.start,baseRoom:s.room,duration:s.end-s.start,overTrash:false};
+ this.classList.add("dragging");
+ document.ontouchmove=touchMoveFrame;
+ document.ontouchend=touchSnapMove;
+}
+function touchMoveFrame(e){
+ const t=e.touches[0];
+ const dx=Math.round((t.clientX-touchMoving.startX)/CONFIG.HALF());
+ const dy=Math.round((t.clientY-touchMoving.startY)/CONFIG.CELL_H);
+ touchMoving.block.style.left=CONFIG.ROOM_W+(touchMoving.baseStart+dx-1)*CONFIG.HALF()+"px";
+ touchMoving.block.style.top=CONFIG.CELL_H*(touchMoving.baseRoom+dy+1)+"px";
+ const rect=trash.getBoundingClientRect();
+ touchMoving.overTrash=t.clientX>rect.left&&t.clientX<rect.right&&t.clientY>rect.top&&t.clientY<rect.bottom;
+ trash.classList.toggle("hover",touchMoving.overTrash);
+ e.preventDefault();
+}
+function touchSnapMove(){
+ if(!touchMoving)return;
+ const s=touchMoving.s;
+ if(touchMoving.overTrash){
+  stays=stays.filter(x=>x.id!==s.id);
+  touchMoving=null;trash.classList.remove("hover");render();return;
+ }
+ s.start=Math.max(1,Math.round((parseInt(touchMoving.block.style.left)-CONFIG.ROOM_W)/CONFIG.HALF())+1);
+ s.room=Math.max(0,Math.round((parseInt(touchMoving.block.style.top)/CONFIG.CELL_H)-1));
+ s.end=(s.name==="清掃")?s.start:s.start+touchMoving.duration;
+ touchMoving=null;render();
+}
+
+// RESIZE PC
 let resizing=null;
 function startResize(e,id){
  resizing={id,startX:e.clientX,startW:document.querySelector(`.block[data-id="${id}"]`).offsetWidth};
@@ -354,6 +390,27 @@ function snapResize(){
  const s=stays.find(x=>x.id===resizing.id);
  s.end=s.start+Math.round(b.offsetWidth/CONFIG.HALF())-1;
  resizing=null;render();
+}
+
+// RESIZE TOUCH
+let touchResizing=null;
+function touchStartResize(e,id){
+ const t=e.touches[0];
+ touchResizing={id,startX:t.clientX,startW:document.querySelector(`.block[data-id="${id}"]`).offsetWidth};
+ document.ontouchmove=touchResizeFrame;
+ document.ontouchend=touchSnapResize;
+ e.stopPropagation();
+}
+function touchResizeFrame(e){
+ const t=e.touches[0];
+ document.querySelector(`.block[data-id="${touchResizing.id}"]`).style.width=touchResizing.startW+(t.clientX-touchResizing.startX)+"px";
+ e.preventDefault();
+}
+function touchSnapResize(){
+ const b=document.querySelector(`.block[data-id="${touchResizing.id}"]`);
+ const s=stays.find(x=>x.id===touchResizing.id);
+ s.end=s.start+Math.round(b.offsetWidth/CONFIG.HALF())-1;
+ touchResizing=null;render();
 }
 
 // MOBILE LIST
