@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- LINE / iPhone 最適化 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
 <title>入寮管理システム</title>
@@ -48,7 +47,7 @@ header{
   padding:8px 14px;
   border-radius:12px;
   border:none;
-  font-size:14px;
+  font-size:16px;
 }
 
 /* Grid */
@@ -100,7 +99,7 @@ header{
 .bar.yellow{background:rgba(255,255,80,0.7);}
 .bar.yellow::before{background:#ffcc00;}
 
-.handle{position:absolute;width:100%;height:6px;}
+.handle{position:absolute;width:100%;height:10px;}
 .handle.top{top:0;}
 .handle.bottom{bottom:0;}
 
@@ -226,7 +225,7 @@ header{
 </div>
 
 <script type="module">
-// ===== Firebase =====
+// ================= Firebase =================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -243,7 +242,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ===== Rooms =====
+// ================= Core System =================
 const roomNames=["P209","P306","P307","P507","FG406","空室待ち1","空室待ち2","空室待ち3","空室待ち4","空室待ち5"];
 const rooms=roomNames.length;
 const cellHeight=28,colWidth=80,headerHeight=28;
@@ -255,7 +254,7 @@ const monthPicker=document.getElementById("monthPicker");
 const today=new Date();
 monthPicker.value=today.toISOString().slice(0,7);
 
-// ===== Grid =====
+// Grid
 function buildGrid(y,m){
   grid.innerHTML="";
   const lastDay=new Date(y,m,0).getDate();
@@ -269,8 +268,8 @@ function buildGrid(y,m){
   }
 }
 
-// ===== Firestore =====
-function getDocRef(){ return doc(db,"dormitory",monthPicker.value); }
+// Firestore
+function getDocRef(){return doc(db,"dormitory",monthPicker.value);}
 
 async function saveMonthData(){
   const data=[...document.querySelectorAll(".bar")].map(b=>({
@@ -284,9 +283,8 @@ async function saveMonthData(){
 function listenRealtime(){
   onSnapshot(getDocRef(),snap=>{
     if(!snap.exists()) return;
-    const data=snap.data().data||[];
     document.querySelectorAll(".bar").forEach(b=>b.remove());
-    data.forEach(d=>{
+    snap.data().data.forEach(d=>{
       const bar=document.createElement("div");
       bar.className="bar "+d.color;
       bar.innerHTML=`${d.name}<div class="handle top"></div><div class="handle bottom"></div>`;
@@ -298,7 +296,7 @@ function listenRealtime(){
   });
 }
 
-// ===== Bar =====
+// Place Bar
 function placeBar(bar,room,start,end){
   bar.dataset.room=room;
   bar.dataset.start=start;
@@ -309,34 +307,67 @@ function placeBar(bar,room,start,end){
   saveMonthData();
 }
 
-// ===== Drag =====
+// ================= SMART MOBILE DRAG & RESIZE =================
 function makeDraggable(bar){
   let sx,sy,sl,st,resize=null;
+
   bar.addEventListener("pointerdown",e=>{
-    resize=e.target.classList.contains("top")?"top":e.target.classList.contains("bottom")?"bottom":null;
+    resize=e.target.classList.contains("top")?"top":
+           e.target.classList.contains("bottom")?"bottom":null;
     bar.setPointerCapture(e.pointerId);
-    sx=e.clientX;sy=e.clientY;
-    sl=parseInt(bar.style.left);st=parseInt(bar.style.top);
+    sx=e.clientX; sy=e.clientY;
+    sl=parseInt(bar.style.left);
+    st=parseInt(bar.style.top);
   });
+
   bar.addEventListener("pointermove",e=>{
     if(sx==null)return;
-    const dx=e.clientX-sx,dy=e.clientY-sy;
-    if(resize==="top"){bar.style.top=st+dy+"px";bar.style.height=parseInt(bar.style.height)-dy+"px";}
-    else if(resize==="bottom"){bar.style.height=parseInt(bar.style.height)+dy+"px";sy=e.clientY;}
-    else{bar.style.left=sl+dx+"px";bar.style.top=st+dy+"px";}
+    const dy=e.clientY-sy;
+    const dx=e.clientX-sx;
+
+    // Resize TOP
+    if(resize==="top"){
+      let nt=st+dy;
+      let nh=parseInt(bar.style.height)-dy;
+      if(nh<cellHeight*2)return;
+      bar.style.top=nt+"px";
+      bar.style.height=nh+"px";
+    }
+    // Resize BOTTOM
+    else if(resize==="bottom"){
+      let nh=parseInt(bar.style.height)+dy;
+      if(nh<cellHeight*2)return;
+      bar.style.height=nh+"px";
+      sy=e.clientY;
+    }
+    // Move
+    else{
+      bar.style.left=sl+dx+"px";
+      bar.style.top=st+dy+"px";
+    }
   });
+
   bar.addEventListener("pointerup",()=>{
     sx=null;
-    let top=parseInt(bar.style.top),left=parseInt(bar.style.left);
+
+    let top=parseInt(bar.style.top);
+    let left=parseInt(bar.style.left);
+    let height=parseInt(bar.style.height);
+
     let s=Math.round((top-headerHeight)/cellHeight)+1;
-    let h=Math.round(parseInt(bar.style.height)/cellHeight);
+    let h=Math.round(height/cellHeight);
     let e=s+h-1;
     let r=Math.round((left-60)/colWidth)+1;
+
+    s=Math.max(1,Math.min(totalRows-1,s));
+    e=Math.max(s+1,Math.min(totalRows,e));
+    r=Math.max(1,Math.min(rooms,r));
+
     placeBar(bar,r,s,e);
   });
 }
 
-// ===== Add =====
+// Add
 let selectedColor="red";
 document.querySelectorAll(".colorPick div").forEach(c=>c.onclick=()=>selectedColor=c.dataset.color);
 enterBtn.onclick=()=>modalBg.style.display="flex";
@@ -353,7 +384,7 @@ addBtn.onclick=()=>{
   nameInput.value="";
 };
 
-// ===== Fee =====
+// Fee
 const priceInput=document.getElementById("priceInput");
 const feeList=document.getElementById("feeList");
 let pricePerNight=2500;
@@ -366,29 +397,27 @@ function autoCalc(){
     const name=b.childNodes[0].nodeValue.trim();
     const rows=parseInt(b.dataset.end)-parseInt(b.dataset.start)+1;
     const nights=Math.floor(rows/2);
-    const fee=nights*pricePerNight;
-    map[name]=(map[name]||0)+fee;
+    map[name]=(map[name]||0)+nights*pricePerNight;
   });
   feeList.innerHTML="";
   for(const n in map) feeList.innerHTML+=`${n}：${map[n].toLocaleString()} 円<br>`;
 }
 
-// ===== Today Wait =====
+// 空室待ち
 todayWaitBtn.onclick=()=>{
   waitList.innerHTML="";
   const now=new Date();
-  const day=now.getDate();
-  const s=(day-1)*2+1, e=s+1;
+  const s=(now.getDate()-1)*2+1, e=s+1;
   const waits=[...document.querySelectorAll(".bar")].filter(b=>{
     const r=parseInt(b.dataset.room);
     const bs=parseInt(b.dataset.start), be=parseInt(b.dataset.end);
-    return r>=6 && !(be<s || bs>e);
+    return r>=6 && !(be<s||bs>e);
   });
-  waitList.innerHTML = waits.length ? waits.map(b=>b.childNodes[0].nodeValue.trim()).join("<br>") : "空室待ちはいません";
+  waitList.innerHTML=waits.length?waits.map(b=>b.childNodes[0].nodeValue.trim()).join("<br>"):"空室待ちはいません";
   waitModal.style.display="flex";
 };
 
-// ===== Month Change =====
+// Month change
 monthPicker.onchange=()=>{
   const [y,m]=monthPicker.value.split("-");
   buildGrid(y,Number(m));
