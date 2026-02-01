@@ -2327,7 +2327,7 @@
             const HEADER_HEIGHT = 60; // Enforced
 
             // 1. Render Header
-            let headerHtml = `<tr style="height: ${HEADER_HEIGHT}px;"><th style="height: ${HEADER_HEIGHT}px; min-width: ${DATE_COL_WIDTH}px; position: sticky; left: 0; z-index: 40; background: var(--bg-panel); padding:0; vertical-align:middle;">日付</th>`;
+            let headerHtml = `<tr style="height: ${HEADER_HEIGHT}px;"><th style="height: ${HEADER_HEIGHT}px; min-width: ${DATE_COL_WIDTH}px; position: sticky; left: 0; z-index: 2100; background: var(--bg-panel); padding:0; vertical-align:middle;">日付</th>`;
             roomNames.forEach(room => {
                 headerHtml += `<th style="height: ${HEADER_HEIGHT}px; min-width: ${COL_WIDTH}px; padding:0; vertical-align:middle;">${room}</th>`;
             });
@@ -2355,7 +2355,7 @@
                 const tdDate = document.createElement('td');
                 tdDate.className = 'sticky-left';
                 tdDate.rowSpan = 2;
-                tdDate.style = `height: ${ROW_HEIGHT * 2}px; font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; width: ${DATE_COL_WIDTH}px; min-width: ${DATE_COL_WIDTH}px; padding: 4px; position: sticky; left: 0; z-index: 30; background: var(--bg-panel);`;
+                tdDate.style = `height: ${ROW_HEIGHT * 2}px; font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; width: ${DATE_COL_WIDTH}px; min-width: ${DATE_COL_WIDTH}px; padding: 4px; position: sticky; left: 0; z-index: 2000; background: var(--bg-panel);`;
                 tdDate.innerHTML = dateHtml;
                 trAM.appendChild(tdDate);
 
@@ -3232,7 +3232,7 @@
                 const tdDate = document.createElement('td');
                 tdDate.className = 'sticky-left';
                 tdDate.rowSpan = 2;
-                tdDate.style = "font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; position: sticky; left: 0; z-index: 30; background: var(--bg-panel);";
+                tdDate.style = "font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; position: sticky; left: 0; z-index: 2000; background: var(--bg-panel);";
                 tdDate.innerText = dateStr;
                 trAM.appendChild(tdDate);
 
