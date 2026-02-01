@@ -2369,14 +2369,9 @@
             if (db) {
                 try {
                     console.log('Sending update to Firestore for:', r.id);
-                    const updateData = sanitizeData({
-                        room: r.room,
-                        status: r.status,
-                        checkIn: r.checkIn,
-                        checkInTime: r.checkInTime,
-                        checkOut: r.checkOut,
-                        totalCost: r.totalCost
-                    });
+                    // Send FULL object to ensure Upsert creates a valid record with name/color
+                    const { id, ...resData } = r;
+                    const updateData = sanitizeData(resData);
 
                     await db.collection('residents').doc(r.id).set(updateData, { merge: true });
                     console.log('✅ Firestore update successful');
@@ -2577,7 +2572,8 @@
             if (db) {
                 try {
                     console.log('Extending resident:', r.id, 'slots:', r.slots);
-                    const updateData = sanitizeData({ slots: r.slots, nights: r.nights, totalCost: r.totalCost });
+                    const { id, ...resData } = r;
+                    const updateData = sanitizeData(resData);
                     await db.collection('residents').doc(r.id).set(updateData, { merge: true });
                     console.log('Successfully extended resident');
                 } catch (error) {
@@ -2602,7 +2598,8 @@
             if (db) {
                 try {
                     console.log('Toggling lock for resident:', r.id, 'locked:', r.locked);
-                    const updateData = sanitizeData({ locked: r.locked });
+                    const { id, ...resData } = r;
+                    const updateData = sanitizeData(resData);
                     await db.collection('residents').doc(r.id).set(updateData, { merge: true });
                     console.log('Successfully toggled lock');
                 } catch (error) {
@@ -2666,7 +2663,8 @@
             if (db) {
                 try {
                     console.log('Moving resident to hotel:', r.id, 'room:', r.room);
-                    const updateData = sanitizeData({ room: r.room, status: 'hotel' });
+                    const { id, ...resData } = r;
+                    const updateData = sanitizeData(resData);
                     await db.collection('residents').doc(r.id).set(updateData, { merge: true });
                     console.log('Successfully moved to hotel');
                 } catch (error) {
@@ -2776,7 +2774,9 @@
 
             // Firestoreに保存
             if (db) {
-                await db.collection('residents').doc(r.id).set({ name: r.name }, { merge: true }); // Name is safe
+                const { id, ...resData } = r;
+                const updateData = sanitizeData(resData);
+                await db.collection('residents').doc(r.id).set(updateData, { merge: true });
             }
 
             hideContextMenu();
