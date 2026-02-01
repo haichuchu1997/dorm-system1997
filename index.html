@@ -1392,7 +1392,9 @@
 
             // Residents Listener
             db.collection('residents').orderBy('checkIn', 'desc').onSnapshot((snapshot) => {
-                localData.residents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Fix: Spread data FIRST, then overwrite id with doc.id to ensure we use the real Firestore ID
+                // This prevents duplicating documents if the data contains a stale/wrong 'id' field.
+                localData.residents = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
                 console.log('Residents updated in real-time:', localData.residents.length);
 
                 if (renderDebounceTimer) clearTimeout(renderDebounceTimer);
