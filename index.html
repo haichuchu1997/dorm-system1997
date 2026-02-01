@@ -381,6 +381,23 @@
             flex-shrink: 0;
         }
 
+        #mobile-resident-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            /* Let clicks pass through to empty cells if needed */
+        }
+
+        #mobile-resident-overlay .resident-block {
+            pointer-events: auto;
+            /* Re-enable for blocks */
+            position: absolute;
+            z-index: 10;
+        }
+
         @keyframes slideUp {
             from {
                 opacity: 0;
@@ -1084,16 +1101,28 @@
             </div>
         </div>
 
-        <!-- Edit List View -->
-        <div id="mobile-edit-view" class="mobile-matrix-container hidden"
-            style="background: transparent; border: none; height: auto; max-height: none; overflow: visible;">
-            <div style="margin-bottom: 16px;">
-                <input type="text" id="m-search" placeholder="名前で検索..." class="input"
-                    style="width: 100%; padding: 12px; border-radius: 12px; background: var(--bg-glass); border: 1px solid rgba(255,255,255,0.1); color: #fff;"
-                    onkeyup="renderMobileEditList()">
+        <!-- Edit Matrix View (Interactive) -->
+        <div id="mobile-edit-view" class="mobile-matrix-container hidden">
+            <div
+                style="padding: 12px 16px; color: var(--text-muted); font-size: 0.85rem; text-align: center; background: var(--bg-panel); border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
+                長押しでメニュー・ドラッグで移動
             </div>
-            <div id="mobile-edit-list" style="display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px;">
-                <!-- Populated by JS -->
+            <div class="mobile-matrix-scroll-area" id="mobile-edit-matrix-container" style="position: relative;">
+                <div id="mobile-matrix-content-wrapper" style="position: relative; width: max-content;">
+                    <table class="matrix-table" id="mobile-interactive-table">
+                        <!-- Header and Body populated by JS -->
+                        <thead id="mobile-interactive-thead"></thead>
+                        <tbody id="mobile-interactive-tbody"></tbody>
+                    </table>
+                    <div id="mobile-resident-overlay"></div>
+                </div>
+            </div>
+            <!-- 30日追加ボタン（固定位置） -->
+            <div class="mobile-matrix-footer">
+                <button class="btn btn-primary w-full" onclick="loadMore30Days()"
+                    style="padding: 10px 20px; font-size: 0.9rem;">
+                    先30日分を追加表示
+                </button>
             </div>
         </div>
 
@@ -1466,8 +1495,12 @@
                     updateDashboard();
                     if (document.getElementById('sect-matrix')) renderMatrix();
                     // Update Mobile Views
-                    if (document.getElementById('mobile-matrix-table-container')) renderMobileMatrix();
-                    if (document.getElementById('mobile-edit-list')) renderMobileEditList();
+                    if (document.getElementById('mobile-matrix-table-container') && !document.getElementById('mobile-matrix-view').classList.contains('hidden')) {
+                        renderMobileMatrix();
+                    }
+                    if (document.getElementById('mobile-interactive-table') && !document.getElementById('mobile-edit-view').classList.contains('hidden')) {
+                        renderMobileInteractiveMatrix();
+                    }
                 }, 10);
             }, (error) => {
                 console.error('Residents listener error:', error);
@@ -1655,53 +1688,319 @@
             } else if (tab === 'edit') {
                 tabs[2].classList.add('active');
                 document.getElementById('mobile-edit-view').classList.remove('hidden');
-                renderMobileEditList();
+                renderMobileInteractiveMatrix();
             }
         }
 
-        function renderMobileEditList() {
-            const container = document.getElementById('mobile-edit-list');
-            if (!container) return;
+        function renderMobileInteractiveMatrix() {
+            ensureDataMigration();
 
-            const searchText = document.getElementById('m-search').value.toLowerCase();
-            const { residents } = localData;
+            const thead = document.getElementById('mobile-interactive-thead');
+            const tbody = document.getElementById('mobile-interactive-tbody');
+            const overlay = document.getElementById('mobile-resident-overlay');
 
-            // Sort by checkIn desc
-            const sorted = [...residents].sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
+            if (!thead || !tbody || !overlay) return;
 
-            let html = '';
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+            overlay.innerHTML = '';
 
-            sorted.forEach(r => {
-                if (searchText && !r.name.toLowerCase().includes(searchText)) return;
+            const { residents, loadedDays } = localData;
+            const daysToShow = loadedDays || 30;
 
-                const statusColor = r.status === 'dorm' ? 'var(--primary)' : 'var(--danger)';
-                const statusLabel = r.status === 'dorm' ? 'DORM' : 'HOTEL';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-                html += `
-                <div class="mobile-card" style="padding: 16px; margin-bottom: 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                        <div>
-                            <span style="font-size: 0.7rem; font-weight: 700; color: ${statusColor}; border: 1px solid ${statusColor}; padding: 2px 6px; border-radius: 4px;">${statusLabel}</span>
-                            <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 8px;">${r.room || '-'}</span>
-                        </div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">${r.checkIn} ~ ${r.checkOut}</div>
-                    </div>
-                    <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">${r.name}</div>
-                    
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem;" onclick="goToEditForm('${r.id}')">編集</button>
-                        <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: rgba(255, 42, 109, 0.1); border: 1px solid var(--danger); color: var(--danger);" onclick="deleteRecord('${r.id}')">削除</button>
-                    </div>
-                </div>
-                `;
+            // Rooms configuration
+            const roomMap = {
+                'P209': 0, 'P306': 1, 'P307': 2, 'P507': 3, 'FG406': 4,
+                'Hotel 1': 5, 'Hotel 2': 6, 'Hotel 3': 7, 'Hotel 4': 8
+            };
+            const roomNames = Object.keys(roomMap);
+
+            // 1. Render Header
+            let headerHtml = '<tr><th style="min-width: 140px; position: sticky; left: 0; z-index: 40; background: var(--bg-panel);">日付</th>';
+            roomNames.forEach(room => {
+                headerHtml += `<th style="min-width: 160px;">${room}</th>`;
             });
+            headerHtml += '</tr>';
+            thead.innerHTML = headerHtml;
 
-            container.innerHTML = html;
+            // 2. Render Grid (Skeleton)
+            for (let i = 0; i < daysToShow; i++) {
+                const targetDate = new Date(today);
+                targetDate.setDate(today.getDate() + i);
+
+                const dateStr = targetDate.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) +
+                    ` (${['日', '月', '火', '水', '木', '金', '土'][targetDate.getDay()]})`;
+
+                // AM Row
+                const trAM = document.createElement('tr');
+                trAM.className = 'row-am';
+
+                const tdDate = document.createElement('td');
+                tdDate.className = 'sticky-left';
+                tdDate.rowSpan = 2;
+                tdDate.style = "font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; width: 140px; min-width: 140px;";
+                tdDate.innerText = dateStr;
+                trAM.appendChild(tdDate);
+
+                for (let j = 0; j < 9; j++) {
+                    const td = document.createElement('td');
+                    td.style = "border-right:1px solid rgba(255,255,255,0.1); width: 160px; min-width: 160px;";
+                    td.innerHTML = `<span style="font-size:0.6rem; color:rgba(255,255,255,0.2);">AM</span>`;
+                    trAM.appendChild(td);
+                }
+                tbody.appendChild(trAM);
+
+                // PM Row
+                const trPM = document.createElement('tr');
+                trPM.className = 'row-day-end';
+                for (let j = 0; j < 9; j++) {
+                    const td = document.createElement('td');
+                    td.style = "border-right:1px solid rgba(255,255,255,0.1); width: 160px; min-width: 160px;";
+                    td.innerHTML = `<span style="font-size:0.6rem; color:rgba(255,255,255,0.2);">PM</span>`;
+                    trPM.appendChild(td);
+                }
+                tbody.appendChild(trPM);
+            }
+
+            // 3. Render Blocks (Overlay) - Logic mostly reused from PC `renderBlocks` but targeting mobile overlay
+            renderMobileBlocks(today, daysToShow);
+        }
+
+        function renderMobileBlocks(startDate, daysToShow) {
+            const { residents } = localData;
+            const overlay = document.getElementById('mobile-resident-overlay');
+
+            const ROW_HEIGHT = 30;
+            const DAY_HEIGHT = 60;
+            const COL_WIDTH = 160;
+            const DATE_COL_WIDTH = 140;
+
+            const roomMap = {
+                'P209': 0, 'P306': 1, 'P307': 2, 'P507': 3, 'FG406': 4,
+                'Hotel 1': 5, 'Hotel 2': 6, 'Hotel 3': 7, 'Hotel 4': 8
+            };
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + daysToShow);
+
+            residents.forEach(r => {
+                const ciParts = r.checkIn.split('-');
+                const checkIn = new Date(ciParts[0], ciParts[1] - 1, ciParts[2]);
+
+                const coParts = r.checkOut.split('-');
+                const checkOut = new Date(coParts[0], coParts[1] - 1, coParts[2]);
+
+                if (checkOut <= startDate || checkIn >= endDate) return;
+
+                const colIndex = roomMap[r.room] !== undefined ? roomMap[r.room] : 0;
+                const diffTime = checkIn - startDate;
+                const offsetDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                const isPM = r.checkInTime === 'PM' || (!r.checkInTime);
+                let topPx = (offsetDays * DAY_HEIGHT) + 60 + (isPM ? ROW_HEIGHT : 0); // +60 for header
+
+                if (!r.slots) r.slots = (r.nights || 1) * 2;
+                let heightPx = (r.slots * ROW_HEIGHT);
+                let leftPx = (colIndex * COL_WIDTH) + DATE_COL_WIDTH;
+
+                // Create Block
+                const div = document.createElement('div');
+                const colorClass = r.color === 'yellow' ? 'color-yellow' : '';
+                let typeClass = '';
+                if (r.type === 'cleaning') typeClass = 'type-cleaning';
+
+                div.className = `resident-block ${r.status === 'hotel' ? 'status-hotel' : ''} ${r.locked ? 'block-locked' : ''} ${colorClass} ${typeClass}`;
+                div.style.top = topPx + 'px';
+                div.style.left = leftPx + 'px';
+                div.style.width = (COL_WIDTH - 12) + 'px';
+                div.style.height = (heightPx - 8) + 'px';
+
+                div.innerHTML = `<div style="pointer-events:none;">${r.locked ? '🔒 ' : ''}${r.name}</div>`;
+                div.style.fontSize = '1rem';
+
+                div.dataset.id = r.id;
+
+                // Touch Events for Drag & Long Press
+                div.addEventListener('touchstart', handleTouchStart, { passive: false });
+                div.addEventListener('touchmove', handleTouchMove, { passive: false });
+                div.addEventListener('touchend', handleTouchEnd);
+
+                overlay.appendChild(div);
+            });
+        }
+
+        // --- Mobile Touch Drag Logic ---
+        let touchDragEl = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let elStartTop = 0;
+        let elStartLeft = 0;
+        let isDragging = false;
+        let longPressTimer = null;
+        let scrollContainer = null;
+
+        function handleTouchStart(e) {
+            if (e.touches.length > 1) return; // Ignore multi-touch
+
+            touchDragEl = e.target.closest('.resident-block');
+            if (!touchDragEl) return;
+
+            // Long Press detection
+            longPressTimer = setTimeout(() => {
+                showContextMenuMobile(e.touches[0].clientX, e.touches[0].clientY, touchDragEl.dataset.id);
+                isDragging = false; // Cancel drag if long press activates
+                touchDragEl = null;
+            }, 500);
+
+            const r = localData.residents.find(res => res.id == touchDragEl.dataset.id);
+            if (r && r.locked) return;
+
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+
+            elStartTop = parseFloat(touchDragEl.style.top);
+            elStartLeft = parseFloat(touchDragEl.style.left);
+
+            scrollContainer = document.getElementById('mobile-edit-matrix-container'); // Scroll area
+        }
+
+        function handleTouchMove(e) {
+            if (!touchDragEl) return;
+
+            const dx = e.touches[0].clientX - touchStartX;
+            const dy = e.touches[0].clientY - touchStartY;
+
+            // If moved significantly, cancel long press
+            if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+                clearTimeout(longPressTimer);
+                isDragging = true;
+                e.preventDefault(); // Prevent scrolling
+            }
+
+            if (isDragging) {
+                touchDragEl.style.top = (elStartTop + dy) + 'px';
+                touchDragEl.style.left = (elStartLeft + dx) + 'px';
+
+                touchDragEl.style.zIndex = 1000;
+                touchDragEl.style.boxShadow = '0 8px 24px rgba(0,0,0,0.5)';
+            }
+        }
+
+        function handleTouchEnd(e) {
+            clearTimeout(longPressTimer);
+            if (!isDragging || !touchDragEl) {
+                touchDragEl = null;
+                return;
+            }
+
+            // Snap Logic (Identical to PC but using different constants if needed, currently same)
+            const HEADER_HEIGHT = 60;
+            const ROW_HEIGHT = 30;
+            const COL_WIDTH = 160;
+            const DATE_COL_WIDTH = 140;
+            const SNAP_STEP = ROW_HEIGHT;
+
+            const currentTop = parseFloat(touchDragEl.style.top);
+            const valY = currentTop - HEADER_HEIGHT;
+            const snappedY = Math.round(valY / SNAP_STEP) * SNAP_STEP;
+            let finalTop = snappedY + HEADER_HEIGHT;
+            if (finalTop < HEADER_HEIGHT) finalTop = HEADER_HEIGHT;
+
+            const currentLeft = parseFloat(touchDragEl.style.left);
+            const valX = currentLeft - DATE_COL_WIDTH;
+            const colIdx = Math.round(valX / COL_WIDTH);
+            const clampedColIdx = Math.max(0, Math.min(8, colIdx));
+            const finalLeft = (clampedColIdx * COL_WIDTH) + DATE_COL_WIDTH;
+
+            touchDragEl.style.top = finalTop + 'px';
+            touchDragEl.style.left = finalLeft + 'px';
+            touchDragEl.style.zIndex = '';
+            touchDragEl.style.boxShadow = '';
+
+            // Update Data
+            const physicalRowIdx = Math.round(snappedY / ROW_HEIGHT);
+            const dayOffset = Math.floor(physicalRowIdx / 2);
+            const isPM = (physicalRowIdx % 2 === 1);
+
+            updateResidentFromDrop(touchDragEl.dataset.id, dayOffset, clampedColIdx, isPM);
+
+            isDragging = false;
+            touchDragEl = null;
+        }
+
+        function showContextMenuMobile(x, y, id) {
+            // Mobile Context Menu Logic
+            const menu = document.getElementById('context-menu');
+            if (!menu) return;
+
+            // Set Global State for Context Menu Actions
+            menuResidentId = id;
+            menuCellData = null;
+
+            // Show Menu logic (Reusing/Adapting from handleContextMenu)
+            const resGroup = document.getElementById('menu-group-resident');
+            const emptyGroup = document.getElementById('menu-group-empty');
+
+            resGroup.classList.remove('hidden');
+            emptyGroup.classList.add('hidden');
+
+            const r = localData.residents.find(res => res.id == menuResidentId);
+            if (r) {
+                document.getElementById('menu-lock').innerText = r.locked ? 'ロック解除' : 'ロック';
+                const completeBtn = document.getElementById('menu-complete-cleaning');
+
+                // Reset visibility
+                resGroup.querySelector('.menu-row').classList.remove('hidden');
+                document.getElementById('menu-lock').classList.remove('hidden');
+                document.getElementById('menu-duplicate').classList.remove('hidden');
+                document.getElementById('menu-hotel').classList.remove('hidden');
+                completeBtn.classList.add('hidden');
+
+                if (r.type === 'cleaning') {
+                    resGroup.querySelector('.menu-row').classList.add('hidden');
+                    document.getElementById('menu-lock').classList.add('hidden');
+                    document.getElementById('menu-duplicate').classList.add('hidden');
+                    document.getElementById('menu-hotel').classList.add('hidden');
+                    completeBtn.classList.remove('hidden');
+                } else if (r.type === 'cleaning-done') {
+                    resGroup.querySelector('.menu-row').classList.add('hidden');
+                    document.getElementById('menu-lock').classList.add('hidden');
+                    document.getElementById('menu-duplicate').classList.add('hidden');
+                    completeBtn.classList.add('hidden');
+                }
+            }
+
+            // Position and Show
+            menu.style.display = 'block';
+            menu.style.position = 'fixed';
+
+            // Center on screen for mobile
+            const menuWidth = 200; // Approx
+            const menuHeight = 250;
+            let left = x;
+            let top = y;
+
+            // Simple center logic or near touch
+            menu.style.top = Math.min(window.innerHeight - menuHeight, Math.max(10, top)) + 'px';
+            menu.style.left = Math.min(window.innerWidth - menuWidth, Math.max(10, left)) + 'px';
+
+            // Click outside to close is handled by global listener or we add one here
+            const closeHandler = (e) => {
+                if (!menu.contains(e.target)) {
+                    menu.style.display = 'none';
+                    document.removeEventListener('click', closeHandler);
+                    document.removeEventListener('touchstart', closeHandler);
+                }
+            };
+            setTimeout(() => {
+                document.addEventListener('click', closeHandler);
+                document.addEventListener('touchstart', closeHandler);
+            }, 100);
         }
 
         function goToEditForm(id) {
             const r = localData.residents.find(res => res.id == id);
-            if (!r) return;
 
             document.getElementById('m-edit-id').value = r.id;
             document.getElementById('m-name').value = r.name;
@@ -1797,7 +2096,7 @@
                         html += `<td onclick="viewOccupiedCell('${names.replace(/'/g, "\\'")}')">
                             <span style="
                                 display:inline-flex; align-items:center; justify-content:center;
-                                width:32px; height:32px; background:rgba(0, 240, 255, 0.2); 
+                                width:32px; height:32px; background:rgba(0, 240, 255, 0.2);
                                 color:var(--primary); border-radius:50%; font-size:1.2rem;">●</span>
                         </td>`;
                     } else if (isAvailable) {
@@ -1824,8 +2123,18 @@
         }
 
         function loadMore30Days() {
+            // Update both trackers to keep them in sync conceptually for mobile usage
             mobileMatrixDays += 30;
-            renderMobileMatrix();
+            if (!localData.loadedDays) localData.loadedDays = 30;
+            localData.loadedDays += 30; // Update for interactive matrix reuse
+
+            // Re-render visible view
+            if (!document.getElementById('mobile-matrix-view').classList.contains('hidden')) {
+                renderMobileMatrix();
+            }
+            if (!document.getElementById('mobile-edit-view').classList.contains('hidden')) {
+                renderMobileInteractiveMatrix();
+            }
         }
 
         function viewOccupiedCell(names) {
@@ -1978,14 +2287,12 @@
             if (document.getElementById('sect-matrix')) {
                 renderMatrix(); // Ensure PC Matrix view is updated
             }
-            // Update Mobile Matrix if visible
-            // Update Mobile Matrix if visible
+            // Update Mobile Views
             if (document.getElementById('mobile-matrix-table-container') && !document.getElementById('mobile-matrix-view').classList.contains('hidden')) {
                 renderMobileMatrix();
             }
-            // Update Mobile Edit List if visible
-            if (document.getElementById('mobile-edit-list') && !document.getElementById('mobile-edit-view').classList.contains('hidden')) {
-                renderMobileEditList();
+            if (document.getElementById('mobile-interactive-table') && !document.getElementById('mobile-edit-view').classList.contains('hidden')) {
+                renderMobileInteractiveMatrix();
             }
         }
 
