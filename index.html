@@ -5021,17 +5021,22 @@
                 else r.status = 'dorm';
             }
 
-            // Sync dates back
-            r.checkIn = start.toISOString();
-            r.checkOut = end.toISOString();
+            // Sync dates back (use YYYY-MM-DD format, same as PC version)
+            const startY = start.getFullYear();
+            const startM = String(start.getMonth() + 1).padStart(2, '0');
+            const startD = String(start.getDate()).padStart(2, '0');
+            r.checkIn = `${startY}-${startM}-${startD}`;
+
+            const endY = end.getFullYear();
+            const endM = String(end.getMonth() + 1).padStart(2, '0');
+            const endD = String(end.getDate()).padStart(2, '0');
+            r.checkOut = `${endY}-${endM}-${endD}`;
 
             // Update checkInTime based on new start time
             r.checkInTime = start.getHours() < 12 ? 'AM' : 'PM';
 
-            // Recalculate slots using unified function (extract date part from ISO string)
-            const checkInDate = r.checkIn.split('T')[0];
-            const checkOutDate = r.checkOut.split('T')[0];
-            r.slots = calculateSlots(checkInDate, checkOutDate, r.checkInTime);
+            // Recalculate slots using unified function
+            r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
 
             // DB Update with await for proper synchronization
             if (db) {
