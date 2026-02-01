@@ -2375,6 +2375,7 @@
                 try {
                     console.log('Sending update to Firestore for:', r.id);
                     // Send FULL object to ensure Upsert creates a valid record with name/color
+                    // EXPLICITLY remove 'id' to prevent writing it to document fields
                     const { id, ...resData } = r;
                     const updateData = sanitizeData(resData);
 
@@ -2745,7 +2746,11 @@
                 checkInTime: isPM ? 'PM' : 'AM'
             };
 
-            if (db) await db.collection('residents').add(sanitizeData(newCleaning));
+            if (db) {
+                // Remove ID from data payload, let Firestore manage ID
+                const { id, ...cleanData } = newCleaning;
+                await db.collection('residents').add(sanitizeData(cleanData));
+            }
             else {
                 localData.residents.push(newCleaning);
                 refreshData();
@@ -2859,7 +2864,9 @@
             updateFinancials(newResident);
 
             if (db) {
-                await db.collection('residents').add(sanitizeData(newResident));
+                // Remove ID from data payload
+                const { id, ...resData } = newResident;
+                await db.collection('residents').add(sanitizeData(resData));
                 // Listeners will handle update
             } else {
                 localData.residents.push(newResident);
