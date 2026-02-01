@@ -2359,9 +2359,11 @@
                 div.style.height = (heightPx - 8) + 'px'; // より多くの余白を確保
                 div.style.boxSizing = 'border-box'; // パディングとボーダーを高さに含める
 
-                // 重なっている場合はz-indexを調整
+                // z-indexを設定（すべてのブロックに基本値を設定）
                 if (overlapIndex > 0) {
-                    div.style.zIndex = 10 + overlapIndex;
+                    div.style.zIndex = 100 + overlapIndex; // 重複ブロックはさらに前面
+                } else {
+                    div.style.zIndex = 100; // 基本z-index（PMマスより前面）
                 }
 
                 div.innerHTML = `<div style="pointer-events:none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: ${ROW_HEIGHT}px;">${r.locked ? '🔒 ' : ''}${r.name}</div>`;
@@ -3203,9 +3205,11 @@
                 div.style.height = (heightPx - 12) + 'px'; // PC版はより多くの余白
                 div.style.boxSizing = 'border-box'; // パディングとボーダーを高さに含める
 
-                // 重なっている場合はz-indexを調整
+                // z-indexを設定（すべてのブロックに基本値を設定）
                 if (overlapIndex > 0) {
-                    div.style.zIndex = 10 + overlapIndex;
+                    div.style.zIndex = 100 + overlapIndex; // 重複ブロックはさらに前面
+                } else {
+                    div.style.zIndex = 100; // 基本z-index（PMマスより前面）
                 }
 
                 // Add locked icon if needed
