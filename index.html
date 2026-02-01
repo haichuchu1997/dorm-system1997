@@ -2758,8 +2758,14 @@
             r.name = '清掃完了';
 
             if (db) {
-                const updateData = sanitizeData({ type: r.type, name: r.name });
-                await db.collection('residents').doc(r.id).update(updateData);
+                try {
+                    const { id, ...resData } = r;
+                    const updateData = sanitizeData(resData);
+                    await db.collection('residents').doc(r.id).set(updateData, { merge: true });
+                } catch (error) {
+                    console.error('Error completing cleaning:', error);
+                    alert('更新に失敗しました: ' + error.message);
+                }
             }
             hideContextMenu();
             refreshData();
