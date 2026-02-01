@@ -2315,6 +2315,16 @@
             container = null;
         }
 
+        // Sanitize data for Firestore (remove undefined, replace NaN)
+        function sanitizeData(obj) {
+            const newObj = { ...obj };
+            Object.keys(newObj).forEach(key => {
+                if (newObj[key] === undefined) delete newObj[key];
+                if (typeof newObj[key] === 'number' && isNaN(newObj[key])) newObj[key] = 0;
+            });
+            return newObj;
+        }
+
         async function updateResidentFromDrop(id, dayOffset, colIdx, isPM) {
             const { residents } = localData;
             const r = residents.find(res => res.id == id);
@@ -2359,7 +2369,7 @@
             if (db) {
                 try {
                     console.log('Sending update to Firestore for:', r.id);
-                    await db.collection('residents').doc(r.id).update({
+                    const updateData = sanitizeData({
                         room: r.room,
                         status: r.status,
                         checkIn: r.checkIn,
@@ -2367,6 +2377,8 @@
                         checkOut: r.checkOut,
                         totalCost: r.totalCost
                     });
+
+                    await db.collection('residents').doc(r.id).set(updateData, { merge: true });
                     console.log('✅ Firestore update successful');
                 } catch (error) {
                     console.error('❌ Error updating resident position:', error);
@@ -2565,7 +2577,8 @@
             if (db) {
                 try {
                     console.log('Extending resident:', r.id, 'slots:', r.slots);
-                    await db.collection('residents').doc(r.id).update({ slots: r.slots, nights: r.nights, totalCost: r.totalCost });
+                    const updateData = sanitizeData({ slots: r.slots, nights: r.nights, totalCost: r.totalCost });
+                    await db.collection('residents').doc(r.id).set(updateData, { merge: true });
                     console.log('Successfully extended resident');
                 } catch (error) {
                     console.error('Error extending resident:', error);
@@ -2589,7 +2602,8 @@
             if (db) {
                 try {
                     console.log('Toggling lock for resident:', r.id, 'locked:', r.locked);
-                    await db.collection('residents').doc(r.id).update({ locked: r.locked });
+                    const updateData = sanitizeData({ locked: r.locked });
+                    await db.collection('residents').doc(r.id).set(updateData, { merge: true });
                     console.log('Successfully toggled lock');
                 } catch (error) {
                     console.error('Error toggling lock:', error);
@@ -2622,7 +2636,8 @@
             if (db) {
                 try {
                     console.log('Duplicating resident to room:', newR.room);
-                    await db.collection('residents').add(newR);
+                    const updateData = sanitizeData(newR);
+                    await db.collection('residents').add(updateData);
                     console.log('Successfully duplicated resident');
                 } catch (error) {
                     console.error('Error duplicating resident:', error);
@@ -2651,7 +2666,8 @@
             if (db) {
                 try {
                     console.log('Moving resident to hotel:', r.id, 'room:', r.room);
-                    await db.collection('residents').doc(r.id).update({ room: r.room, status: 'hotel' });
+                    const updateData = sanitizeData({ room: r.room, status: 'hotel' });
+                    await db.collection('residents').doc(r.id).set(updateData, { merge: true });
                     console.log('Successfully moved to hotel');
                 } catch (error) {
                     console.error('Error moving to hotel:', error);
@@ -2726,7 +2742,7 @@
                 checkInTime: isPM ? 'PM' : 'AM'
             };
 
-            if (db) await db.collection('residents').add(newCleaning);
+            if (db) await db.collection('residents').add(sanitizeData(newCleaning));
             else {
                 localData.residents.push(newCleaning);
                 refreshData();
@@ -2742,7 +2758,8 @@
             r.name = '清掃完了';
 
             if (db) {
-                await db.collection('residents').doc(r.id).update({ type: r.type, name: r.name });
+                const updateData = sanitizeData({ type: r.type, name: r.name });
+                await db.collection('residents').doc(r.id).update(updateData);
             }
             hideContextMenu();
             refreshData();
@@ -2759,7 +2776,7 @@
 
             // Firestoreに保存
             if (db) {
-                await db.collection('residents').doc(r.id).update({ name: r.name });
+                await db.collection('residents').doc(r.id).set({ name: r.name }, { merge: true }); // Name is safe
             }
 
             hideContextMenu();
@@ -2831,7 +2848,7 @@
             updateFinancials(newResident);
 
             if (db) {
-                await db.collection('residents').add(newResident);
+                await db.collection('residents').add(sanitizeData(newResident));
                 // Listeners will handle update
             } else {
                 localData.residents.push(newResident);
