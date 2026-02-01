@@ -2232,7 +2232,7 @@
                 const tdDate = document.createElement('td');
                 tdDate.className = 'sticky-left';
                 tdDate.rowSpan = 2;
-                tdDate.style = `height: ${ROW_HEIGHT * 2}px; font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; width: ${DATE_COL_WIDTH}px; min-width: ${DATE_COL_WIDTH}px; padding: 4px;`;
+                tdDate.style = `height: ${ROW_HEIGHT * 2}px; font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; width: ${DATE_COL_WIDTH}px; min-width: ${DATE_COL_WIDTH}px; padding: 4px; position: sticky; left: 0; z-index: 30; background: var(--bg-panel);`;
                 tdDate.innerHTML = dateHtml;
                 trAM.appendChild(tdDate);
 
@@ -3082,7 +3082,7 @@
                 const tdDate = document.createElement('td');
                 tdDate.className = 'sticky-left';
                 tdDate.rowSpan = 2;
-                tdDate.style = "font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle;";
+                tdDate.style = "font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; position: sticky; left: 0; z-index: 30; background: var(--bg-panel);";
                 tdDate.innerText = dateStr;
                 trAM.appendChild(tdDate);
 
