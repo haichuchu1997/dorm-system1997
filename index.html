@@ -1310,7 +1310,7 @@
         console.log("===== SCRIPT STARTED =====");
         console.log("Firebase SDK loaded:", typeof firebase !== 'undefined');
 
-        // Firebase設定（フルリアルタイム同期対応）
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
         const firebaseConfig = {
             apiKey: "AIzaSyAktEtPenYgXw1Xl5oAf7faiLLL0vCX4B0",
             authDomain: "dcpdcp-3e87c.firebaseapp.com",
@@ -2358,7 +2358,7 @@
             // Firestoreに保存
             if (db) {
                 try {
-                    console.log('Updating resident position:', r.id);
+                    console.log('Sending update to Firestore for:', r.id);
                     await db.collection('residents').doc(r.id).update({
                         room: r.room,
                         status: r.status,
@@ -2367,14 +2367,18 @@
                         checkOut: r.checkOut,
                         totalCost: r.totalCost
                     });
+                    console.log('✅ Firestore update successful');
                 } catch (error) {
-                    console.error('Error updating resident position:', error);
+                    console.error('❌ Error updating resident position:', error);
+                    alert('保存に失敗しました。ページを再読み込みしてください。\n' + error.message);
                 }
+            } else {
+                console.warn('⚠️ DB not connected. Changes are local only.');
             }
 
-            // Re-render to ensure visual consistency (colors, perfect snap)
-            renderMatrix();
-            updateDashboard(); // Ensure KPI sync
+            // Re-render handled by listener or immediate feedback
+            // renderMatrix(); // Listener will trigger this
+            // updateDashboard(); // Listener will trigger this
         }
 
         function loadMoreDays() {
