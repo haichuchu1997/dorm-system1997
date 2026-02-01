@@ -2630,6 +2630,51 @@
             return overlapCount < limit ? 'dorm' : 'hotel';
         }
 
+        // Calculate Slots (AM/PM slots) from check-in and check-out dates
+        // This function unifies the slot calculation logic used by both PC and Mobile versions
+        function calculateSlots(checkInStr, checkOutStr, checkInTime) {
+            // Parse dates from YYYY-MM-DD format
+            const ciParts = checkInStr.split('-');
+            const checkIn = new Date(ciParts[0], ciParts[1] - 1, ciParts[2]);
+
+            const coParts = checkOutStr.split('-');
+            const checkOut = new Date(coParts[0], coParts[1] - 1, coParts[2]);
+
+            // Set time based on checkInTime (AM = 10:00, PM = 15:00)
+            if (checkInTime === 'AM') {
+                checkIn.setHours(10, 0, 0, 0);
+            } else {
+                checkIn.setHours(15, 0, 0, 0); // Default to PM
+            }
+
+            // Check-out is always AM of the checkout date
+            checkOut.setHours(10, 0, 0, 0);
+
+            // Count slots (each slot is half a day: AM or PM)
+            let totalSlots = 0;
+            const current = new Date(checkIn);
+
+            while (current < checkOut) {
+                totalSlots++;
+
+                // Move to next slot
+                if (current.getHours() < 12) {
+                    // Currently AM, move to PM same day
+                    current.setHours(15, 0, 0, 0);
+                } else {
+                    // Currently PM, move to AM next day
+                    current.setDate(current.getDate() + 1);
+                    current.setHours(10, 0, 0, 0);
+                }
+
+                // Safety limit
+                if (totalSlots > 200) break;
+            }
+
+            return Math.max(1, totalSlots); // Minimum 1 slot
+        }
+
+
         // --- 4. Mobile Functions ---
 
         function initMobile() {
@@ -3265,12 +3310,17 @@
             const status = checkAllocation(formData.checkIn, formData.checkOut, currentResidents, settings.totalRooms);
             const financials = calcStay(formData.checkIn, formData.checkOut, settings.pricePerNight);
 
+            // Calculate checkInTime and slots for unified rendering
+            const checkInTime = 'PM'; // デフォルトはPM
+            const slots = calculateSlots(formData.checkIn, formData.checkOut, checkInTime);
+
             const finalRecord = {
                 ...formData,
                 status: status,
                 nights: financials.nights,
                 totalCost: financials.total,
-                checkInTime: 'PM' // デフォルトはPM
+                checkInTime: checkInTime,
+                slots: slots
             };
 
             // 3. Save (Create or Update)
@@ -3693,7 +3743,11 @@
                 const topPx = (offsetDays * DAY_HEIGHT) + 60 + (isPM ? ROW_HEIGHT : 0);
 
                 // Calculate height based on slots (1 slot = 30px)
-                if (!r.slots) r.slots = (r.nights || 1) * 2;
+                // Use unified slot calculation function
+                if (!r.checkInTime) r.checkInTime = 'PM'; // Ensure checkInTime is set
+                if (!r.slots) {
+                    r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
+                }
                 const heightPx = (r.slots * ROW_HEIGHT);
 
                 blockInfos.push({
@@ -4761,7 +4815,10 @@
                 const diffDays = Math.floor((start - today) / (1000 * 60 * 60 * 24));
                 if (diffDays >= daysToShow || end < today) return; // Out of view
 
-                const isStartPM = start.getHours() >= 15;
+                // Use checkInTime field for AM/PM determination (same as PC version)
+                if (!r.checkInTime) r.checkInTime = 'PM'; // Default to PM
+                const isStartPM = r.checkInTime === 'PM';
+
                 // Row: Header(1) + PreviousDays(diffDays*2) + (1 if PM) + 1(1-based)
                 let gridRowStart = 2 + (Math.max(0, diffDays) * 2) + (isStartPM ? 1 : 0);
                 if (diffDays < 0) gridRowStart = 2; // Clip start
@@ -4770,29 +4827,11 @@
                 const gridCol = roomMap[r.room];
                 if (!gridCol) return; // Unknown room
 
-                // Duration (Slots)
-                let slots = 0;
-                // Simple calculation tailored for grid
-                // This needs robust duration logic similar to v1 but mapped to grid rows
-                let temp = new Date(start);
-                if (temp < today) temp = new Date(today); // Clip start
-                let totalSlots = 0;
-
-                // End date logic for slots
-                let current = new Date(temp);
-                while (current < end) {
-                    // AM check
-                    if (current.getHours() < 12) {
-                        totalSlots++;
-                        current.setHours(15, 0, 0, 0);
-                    } else {
-                        totalSlots++;
-                        current.setDate(current.getDate() + 1);
-                        current.setHours(10, 0, 0, 0);
-                    }
-                    if (totalSlots > (daysToShow * 2)) break; // Safety
+                // Duration (Slots) - Use unified calculation function
+                if (!r.slots) {
+                    r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
                 }
-                if (totalSlots < 1) totalSlots = 1;
+                let totalSlots = r.slots;
 
                 // Overlap Check for offset
                 const key = `${gridCol}-${gridRowStart}`;
