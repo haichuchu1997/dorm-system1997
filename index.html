@@ -1518,6 +1518,260 @@
                 box-shadow: 0 0 0 2px #fff, 0 0 10px var(--primary);
             }
         }
+
+        /* Ver.2.0 Mobile Editor Styles (CSS Grid Base) */
+        .mobile-v2-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #0f1218;
+            padding-top: 60px;
+            /* Header Space */
+            padding-bottom: 240px;
+            /* Control Panel Space */
+            box-sizing: border-box;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .mobile-v2-matrix {
+            display: grid;
+            /* Date Column (100px) + 9 Rooms (120px) */
+            grid-template-columns: 100px repeat(9, 120px);
+            /* Rows will be generated dynamically */
+            grid-auto-rows: 30px;
+            overflow: auto;
+            position: relative;
+            background: #1a1d24;
+            height: 100%;
+            overscroll-behavior: none;
+            touch-action: pan-x pan-y;
+        }
+
+        /* Grid Lines */
+        .v2-cell {
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+        }
+
+        .v2-cell.row-pm {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Headers (Sticky) */
+        .v2-header-cell {
+            position: sticky;
+            top: 0;
+            z-index: 3000;
+            background: #151920;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            grid-row: 1 / 2;
+            /* 1行目固定 */
+        }
+
+        /* Date Column (Sticky) */
+        .v2-date-cell {
+            position: sticky;
+            left: 0;
+            z-index: 2900;
+            background: #1a1d24;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            grid-column: 1 / 2;
+            /* 1列目固定 */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            /* 日付区切り */
+        }
+
+        .v2-date-cell.weekend {
+            color: #ff4d4f;
+        }
+
+        .v2-date-cell.saturday {
+            color: #40a9ff;
+        }
+
+        /* Corner Cell */
+        .v2-corner {
+            position: sticky;
+            top: 0;
+            left: 0;
+            z-index: 3100;
+            background: #151920;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            grid-row: 1 / 2;
+            grid-column: 1 / 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        /* Resident Blocks (Grid Item) */
+        .v2-block {
+            margin: 2px;
+            border-radius: 4px;
+            padding: 0 6px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            z-index: 1000;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-sizing: border-box;
+            background: rgba(0, 150, 255, 0.15);
+            border: 1px solid rgba(0, 150, 255, 0.5);
+            color: #fff;
+            position: relative;
+            /* Grid配置で絶対配置ではないが、内部要素のために */
+        }
+
+        /* Status Colors */
+        .v2-block.status-hotel {
+            background: rgba(255, 42, 109, 0.15);
+            border: 1px solid rgba(255, 42, 109, 0.5);
+            color: #ff2a6d;
+        }
+
+        .v2-block.selected {
+            z-index: 4000 !important;
+            box-shadow: 0 0 0 2px #fff, 0 0 20px var(--primary);
+            transform: scale(1.02);
+            background: rgba(0, 240, 255, 0.3);
+        }
+
+        /* Control Panel */
+        .v2-control-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 280px;
+            /* 少し高く */
+            background: rgba(15, 18, 24, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(0, 240, 255, 0.3);
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            box-sizing: border-box;
+            box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.5);
+            transform: translateY(110%);
+            /* 初期非表示 */
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .v2-control-panel.active {
+            transform: translateY(0);
+        }
+
+        .panel-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .panel-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .panel-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .panel-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .ctrl-group {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            gap: 8px;
+        }
+
+        .ctrl-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            width: 100%;
+            text-align: center;
+        }
+
+        .ctrl-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .ctrl-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .ctrl-btn:active {
+            background: var(--primary);
+            color: #000;
+            transform: scale(0.95);
+        }
+
+        .ctrl-value {
+            font-size: 0.9rem;
+            font-weight: bold;
+            flex: 1;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .panel-actions {
+            margin-top: auto;
+            display: flex;
+            gap: 10px;
+            padding-top: 10px;
+        }
     </style>
 </head>
 
@@ -1668,7 +1922,90 @@
             </div>
         </div>
 
-        <!-- 操作ガイドオーバーレイ -->
+        <!-- Ver.2.0 Mobile Editor (CSS Grid) -->
+        <div id="mobile-edit-view-v2" class="mobile-v2-container hidden">
+            <!-- Header (Fixed) -->
+            <div class="mobile-edit-header"
+                style="position:fixed; top:0; left:0; width:100%; z-index:6000; background:rgba(15, 18, 24, 0.9);">
+                <div class="mobile-edit-header-title">
+                    <div class="mobile-edit-icon" style="color:var(--mobile-accent);">▲</div>
+                    <div>
+                        <div class="mobile-edit-title-text">Edit Mode V2.0</div>
+                        <div class="mobile-edit-subtitle">Smart Control System</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <!-- 切り替え用（デバッグ） -->
+                    <button class="mobile-help-btn" onclick="switchMobileTab('form')" title="戻る">◀</button>
+                </div>
+            </div>
+
+            <!-- CSS Grid Matrix -->
+            <div id="v2-matrix" class="mobile-v2-matrix">
+                <!-- JSで動的生成 -->
+            </div>
+
+            <!-- Smart Control Panel -->
+            <div id="v2-panel" class="v2-control-panel">
+                <div class="panel-info">
+                    <div>
+                        <div class="panel-name" id="p-name">選択してください</div>
+                        <div class="panel-desc" id="p-desc">ROOM / DATE</div>
+                    </div>
+                    <div class="panel-actions">
+                        <button class="ctrl-btn" style="color:#ff4d4f; border-color:rgba(255,77,79,0.5);"
+                            onclick="handleV2Action('delete')">🗑️</button>
+                    </div>
+                </div>
+
+                <div class="panel-controls">
+                    <!-- Date Control -->
+                    <div class="ctrl-group">
+                        <div class="ctrl-label">DATE / 日付移動</div>
+                        <div class="ctrl-row">
+                            <button class="ctrl-btn" onclick="handleV2Control('date', -1)">◀</button>
+                            <span class="ctrl-value">MOVE</span>
+                            <button class="ctrl-btn" onclick="handleV2Control('date', 1)">▶</button>
+                        </div>
+                        <div class="ctrl-row">
+                            <button class="ctrl-btn" onclick="handleV2Control('duration', -1)">-1</button>
+                            <span class="ctrl-value">NIGHTS</span>
+                            <button class="ctrl-btn" onclick="handleV2Control('duration', 1)">+1</button>
+                        </div>
+                    </div>
+
+                    <!-- Room Control -->
+                    <div class="ctrl-group">
+                        <div class="ctrl-label">ROOM / 部屋移動</div>
+                        <div class="ctrl-row">
+                            <button class="ctrl-btn" onclick="handleV2Control('room', -1)">◀</button>
+                            <span class="ctrl-value">ROOM</span>
+                            <button class="ctrl-btn" onclick="handleV2Control('room', 1)">▶</button>
+                        </div>
+                        <div class="ctrl-label" style="margin-top:5px; color:var(--mobile-accent);">STATUS: <span
+                                id="p-status">OK</span></div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary"
+                    style="margin-top:15px; width:100%; padding:12px; font-weight:bold; background:var(--mobile-accent); color:#000; border:none;"
+                    onclick="closeV2Panel()">完了 / CLOSE</button>
+            </div>
+        </div>
+
+        <!-- Confirm Modal for V2 -->
+        <div id="v2-confirm-modal" class="modal-overlay">
+            <div class="modal-box">
+                <h3 id="v2-confirm-title">Confirmation</h3>
+                <p id="v2-confirm-msg">Are you sure?</p>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeV2Confirm()">Cancel</button>
+                    <button class="btn btn-primary" id="v2-confirm-ok">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- OLD VIEW (Keep for backup temporarily) -->
         <div id="mobile-help-overlay" class="hidden">
             <div class="mobile-help-content">
                 <h3 class="mobile-help-title">📱 操作ガイド</h3>
@@ -2294,6 +2631,9 @@
             document.getElementById('mobile-form-view').classList.add('hidden');
             document.getElementById('mobile-matrix-view').classList.add('hidden');
             document.getElementById('mobile-edit-view').classList.add('hidden');
+            // Ver.2.0 Hide
+            const v2 = document.getElementById('mobile-edit-view-v2');
+            if (v2) v2.classList.add('hidden');
 
             if (tab === 'form') {
                 tabs[0].classList.add('active');
@@ -2304,8 +2644,14 @@
                 renderMobileMatrix();
             } else if (tab === 'edit') {
                 tabs[2].classList.add('active');
-                document.getElementById('mobile-edit-view').classList.remove('hidden');
-                renderMobileInteractiveMatrix();
+                // Use Ver.2.0
+                if (v2) {
+                    v2.classList.remove('hidden');
+                    if (typeof renderMobileV2 === 'function') renderMobileV2();
+                } else {
+                    document.getElementById('mobile-edit-view').classList.remove('hidden');
+                    renderMobileInteractiveMatrix();
+                }
             }
         }
 
@@ -4297,6 +4643,262 @@
 
         // 自動初期化
         window.addEventListener('load', autoInit);
+        // === Ver.2.0 Mobile Logic (CSS Grid & Smart Panel) ===
+        let v2SelectedId = null;
+
+        function renderMobileV2() {
+            const container = document.getElementById('v2-matrix');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const { residents, loadedDays } = localData;
+            const daysToShow = loadedDays || 30;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Rooms & Grid Config
+            const roomNames = ['P209', 'P306', 'P307', 'P507', 'FG406', 'Hotel 1', 'Hotel 2', 'Hotel 3', 'Hotel 4'];
+            const roomMap = {};
+            roomNames.forEach((r, i) => roomMap[r] = i + 2); // 1 is Date Col
+
+            // 1. Render Headers (Sticky Top)
+            // Left-Top Corner
+            const corner = document.createElement('div');
+            corner.className = 'v2-corner';
+            corner.innerText = '日付';
+            container.appendChild(corner);
+
+            // Room Headers
+            roomNames.forEach((room, i) => {
+                const th = document.createElement('div');
+                th.className = 'v2-header-cell';
+                th.innerText = room;
+                th.style.gridColumn = `${i + 2} / span 1`;
+                container.appendChild(th);
+            });
+
+            // 2. Render Grid Background (Cells & Dates)
+            for (let i = 0; i < daysToShow; i++) {
+                const targetDate = new Date(today);
+                targetDate.setDate(today.getDate() + i);
+
+                const day = targetDate.getDate();
+                const weekIdx = targetDate.getDay();
+                const weekStr = ['日', '月', '火', '水', '木', '金', '土'][weekIdx];
+                const isWeekend = weekIdx === 0 ? 'weekend' : (weekIdx === 6 ? 'saturday' : '');
+
+                // Row Start Index (1 for header) + (i * 2) + 1
+                const rowStart = 2 + (i * 2);
+
+                // Date Cell (Span 2 rows: AM/PM)
+                const dateCell = document.createElement('div');
+                dateCell.className = `v2-date-cell ${isWeekend}`;
+                dateCell.innerHTML = `<div>${targetDate.getMonth() + 1}/${day}</div><div style="font-size:0.7rem;">(${weekStr})</div>`;
+                dateCell.style.gridRow = `${rowStart} / span 2`;
+                container.appendChild(dateCell);
+
+                // Grid Cells for each room
+                roomNames.forEach((_, rIdx) => {
+                    const col = rIdx + 2;
+                    // AM Cell
+                    const am = document.createElement('div');
+                    am.className = 'v2-cell';
+                    am.style.gridColumn = col;
+                    am.style.gridRow = rowStart;
+                    container.appendChild(am);
+
+                    // PM Cell
+                    const pm = document.createElement('div');
+                    pm.className = 'v2-cell row-pm';
+                    pm.style.gridColumn = col;
+                    pm.style.gridRow = rowStart + 1;
+                    container.appendChild(pm);
+                });
+            }
+
+            // 3. Render Blocks
+            // Calculate overlaps first
+            const occupancy = {}; // key: "col-row" -> count
+
+            const visibleResidents = residents.filter(r => {
+                // Filter logic similar to v1
+                if (localData.filter === 'dorm' && r.status === 'hotel') return false;
+                if (localData.filter === 'hotel' && r.status !== 'hotel') return false;
+                return true;
+            });
+
+            visibleResidents.forEach(r => {
+                const start = new Date(r.checkIn);
+                const end = new Date(r.checkOut);
+
+                // Calculate Grid Position
+                const diffDays = Math.floor((start - today) / (1000 * 60 * 60 * 24));
+                if (diffDays >= daysToShow || end < today) return; // Out of view
+
+                const isStartPM = start.getHours() >= 15;
+                // Row: Header(1) + PreviousDays(diffDays*2) + (1 if PM) + 1(1-based)
+                let gridRowStart = 2 + (Math.max(0, diffDays) * 2) + (isStartPM ? 1 : 0);
+                if (diffDays < 0) gridRowStart = 2; // Clip start
+
+                // Column
+                const gridCol = roomMap[r.room];
+                if (!gridCol) return; // Unknown room
+
+                // Duration (Slots)
+                let slots = 0;
+                // Simple calculation tailored for grid
+                // This needs robust duration logic similar to v1 but mapped to grid rows
+                // For now, reuse r.slots logic if available, or recalc
+                // Recalculate precisely
+                let temp = new Date(start);
+                if (temp < today) temp = new Date(today); // Clip start
+                let totalSlots = 0;
+
+                // End date logic for slots
+                let current = new Date(temp);
+                while (current < end) {
+                    // AM check
+                    if (current.getHours() < 12) {
+                        totalSlots++;
+                        current.setHours(15, 0, 0, 0);
+                    } else {
+                        totalSlots++;
+                        current.setDate(current.getDate() + 1);
+                        current.setHours(10, 0, 0, 0);
+                    }
+                    if (totalSlots > (daysToShow * 2)) break; // Safety
+                }
+                if (totalSlots < 1) totalSlots = 1;
+
+                // Overlap Check for offset
+                const key = `${gridCol}-${gridRowStart}`;
+                const overlapIdx = occupancy[key] || 0;
+                occupancy[key] = overlapIdx + 1;
+
+                // Create Block
+                const div = document.createElement('div');
+                div.className = `v2-block ${r.status === 'hotel' ? 'status-hotel' : ''}`;
+                if (r.id === v2SelectedId) div.classList.add('selected');
+                div.innerText = r.name;
+
+                div.style.gridColumn = `${gridCol} / span 1`;
+                div.style.gridRow = `${gridRowStart} / span ${totalSlots}`;
+
+                // Offset for overlap
+                if (overlapIdx > 0) {
+                    div.style.marginLeft = `${overlapIdx * 10}px`;
+                    div.style.width = `calc(100% - ${overlapIdx * 10}px)`;
+                    div.style.zIndex = 1000 + overlapIdx;
+                }
+
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    openV2Panel(r.id);
+                };
+
+                container.appendChild(div);
+            });
+
+            // Background click to close
+            container.onclick = (e) => {
+                if (e.target === container || e.target.classList.contains('v2-cell')) {
+                    closeV2Panel();
+                }
+            };
+        }
+
+        // Panel Logic
+        function openV2Panel(id) {
+            v2SelectedId = id;
+            renderMobileV2(); // Re-render to show selection highlight
+
+            const r = localData.residents.find(x => x.id === id);
+            if (!r) return;
+
+            document.getElementById('p-name').innerText = r.name;
+            const start = new Date(r.checkIn);
+            const end = new Date(r.checkOut);
+            const dateStr = `${start.getMonth() + 1}/${start.getDate()} - ${end.getMonth() + 1}/${end.getDate()}`;
+            document.getElementById('p-desc').innerText = `${r.room} / ${dateStr}`;
+            document.getElementById('p-status').innerText = 'READY';
+
+            document.getElementById('v2-panel').classList.add('active');
+
+            // Scroll to view if needed? No, panel is overlay.
+        }
+
+        function closeV2Panel() {
+            v2SelectedId = null;
+            document.getElementById('v2-panel').classList.remove('active');
+            renderMobileV2();
+        }
+
+        async function handleV2Action(action) {
+            if (!v2SelectedId) return;
+            if (action === 'delete') {
+                if (confirm('本当に削除しますか？')) {
+                    // Delete Logic
+                    if (db) await db.collection('residents').doc(v2SelectedId).delete();
+                    localData.residents = localData.residents.filter(r => r.id !== v2SelectedId);
+                    closeV2Panel();
+                    saveData(); // Trigger persistence
+                }
+            }
+        }
+
+        // Smart Controls
+        async function handleV2Control(type, delta) {
+            if (!v2SelectedId) return;
+            const r = localData.residents.find(x => x.id === v2SelectedId);
+            if (!r) return;
+
+            // Update State
+            const start = new Date(r.checkIn);
+            const end = new Date(r.checkOut);
+
+            if (type === 'date') {
+                start.setDate(start.getDate() + delta);
+                end.setDate(end.getDate() + delta);
+            } else if (type === 'duration') {
+                end.setDate(end.getDate() + delta);
+                // Min check
+                if (end <= start) end.setDate(start.getDate() + 1);
+            } else if (type === 'room') {
+                const rooms = ['P209', 'P306', 'P307', 'P507', 'FG406', 'Hotel 1', 'Hotel 2', 'Hotel 3', 'Hotel 4'];
+                let idx = rooms.indexOf(r.room);
+                if (idx === -1) idx = 0;
+                idx += delta;
+                if (idx < 0) idx = rooms.length - 1;
+                if (idx >= rooms.length) idx = 0;
+                r.room = rooms[idx];
+
+                // Auto status update
+                if (r.room.includes('Hotel')) r.status = 'hotel';
+                else r.status = 'dorm';
+            }
+
+            // Sync dates back
+            r.checkIn = start.toISOString();
+            r.checkOut = end.toISOString();
+
+            // Recalc Slots
+            r.slots = Math.ceil((end - start) / (1000 * 60 * 60 * 12)); // Approx
+
+            // UI Update Immediate (Optimistic)
+            renderMobileV2();
+            openV2Panel(v2SelectedId); // Refresh panel info
+
+            // DB Update (Debounce or direct)
+            if (db) {
+                db.collection('residents').doc(r.id).update({
+                    checkIn: r.checkIn,
+                    checkOut: r.checkOut,
+                    room: r.room,
+                    status: r.status
+                });
+            }
+            saveData();
+        }
     </script>
 
     <!-- 十字コントローラーオーバーレイ -->
