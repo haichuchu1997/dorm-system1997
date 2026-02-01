@@ -2480,10 +2480,10 @@
                 // 横方向のオフセットを適用
                 const OVERLAP_OFFSET = 35; // 横に35pxずらす
                 const baseLeftPx = (colIndex * COL_WIDTH) + DATE_COL_WIDTH;
-                const leftPx = baseLeftPx + (overlapIndex * OVERLAP_OFFSET);
+                const leftPx = baseLeftPx + (overlapIndex * OVERLAP_OFFSET) + 2; // 中央寄せのための微調整
 
                 // 幅を調整（重なっている場合は少し狭く）
-                const widthPx = COL_WIDTH - 6 - (overlapIndex * 10);
+                const widthPx = COL_WIDTH - 5 - (overlapIndex * 10);
 
                 // Create Block
                 const div = document.createElement('div');
@@ -3345,9 +3345,9 @@
                 offsetCounters[colIndex]++;
 
                 // 横方向のオフセットを適用
-                const OVERLAP_OFFSET = 45; // PC版は45pxずらす
+                const OVERLAP_OFFSET = 35; // 横に35pxずらす
                 const baseLeftPx = (colIndex * COL_WIDTH) + DATE_COL_WIDTH;
-                const leftPx = baseLeftPx + (overlapIndex * OVERLAP_OFFSET);
+                const leftPx = baseLeftPx + (overlapIndex * OVERLAP_OFFSET) + 2;
 
                 // 幅を調整（重なっている場合は少し狭く）
                 const widthPx = COL_WIDTH - 12 - (overlapIndex * 12);
