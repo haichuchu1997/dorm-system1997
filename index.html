@@ -1718,14 +1718,16 @@
             };
             const roomNames = Object.keys(roomMap);
 
-            // Dimensions (Compact)
-            const COL_WIDTH = 120; // Reduced from 160
-            const DATE_COL_WIDTH = 100; // Reduced from 140
+            // Dimensions (Refined)
+            const COL_WIDTH = 120;
+            const DATE_COL_WIDTH = 90;
+            const ROW_HEIGHT = 30; // Back to 30px for better touch
+            const HEADER_HEIGHT = 60; // Enforced
 
             // 1. Render Header
-            let headerHtml = `<tr><th style="min-width: ${DATE_COL_WIDTH}px; position: sticky; left: 0; z-index: 40; background: var(--bg-panel);">日付</th>`;
+            let headerHtml = `<tr style="height: ${HEADER_HEIGHT}px;"><th style="height: ${HEADER_HEIGHT}px; min-width: ${DATE_COL_WIDTH}px; position: sticky; left: 0; z-index: 40; background: var(--bg-panel); padding:0; vertical-align:middle;">日付</th>`;
             roomNames.forEach(room => {
-                headerHtml += `<th style="min-width: ${COL_WIDTH}px;">${room}</th>`;
+                headerHtml += `<th style="height: ${HEADER_HEIGHT}px; min-width: ${COL_WIDTH}px; padding:0; vertical-align:middle;">${room}</th>`;
             });
             headerHtml += '</tr>';
             thead.innerHTML = headerHtml;
@@ -1735,24 +1737,30 @@
                 const targetDate = new Date(today);
                 targetDate.setDate(today.getDate() + i);
 
-                const dateStr = targetDate.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) +
-                    ` (${['日', '月', '火', '水', '木', '金', '土'][targetDate.getDay()]})`;
+                const month = targetDate.getMonth() + 1;
+                const day = targetDate.getDate();
+                const weekDay = ['日', '月', '火', '水', '木', '金', '土'][targetDate.getDay()];
+                const isWeekendColor = targetDate.getDay() === 0 ? '#ff4d4f' : (targetDate.getDay() === 6 ? '#40a9ff' : '#fff');
+
+                // Multiline Date
+                const dateHtml = `<div style="line-height:1.2; font-size:0.85rem;">${month}/${day}<br><span style="font-size:0.75rem; color:${isWeekendColor};">(${weekDay})</span></div>`;
 
                 // AM Row
                 const trAM = document.createElement('tr');
                 trAM.className = 'row-am';
+                trAM.style.height = ROW_HEIGHT + 'px';
 
                 const tdDate = document.createElement('td');
                 tdDate.className = 'sticky-left';
                 tdDate.rowSpan = 2;
-                tdDate.style = `font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; width: ${DATE_COL_WIDTH}px; min-width: ${DATE_COL_WIDTH}px;`;
-                tdDate.innerText = dateStr;
+                tdDate.style = `height: ${ROW_HEIGHT * 2}px; font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; width: ${DATE_COL_WIDTH}px; min-width: ${DATE_COL_WIDTH}px; padding: 4px;`;
+                tdDate.innerHTML = dateHtml;
                 trAM.appendChild(tdDate);
 
                 for (let j = 0; j < 9; j++) {
                     const td = document.createElement('td');
-                    td.style = `border-right:1px solid rgba(255,255,255,0.1); width: ${COL_WIDTH}px; min-width: ${COL_WIDTH}px;`;
-                    td.innerHTML = `<span style="font-size:0.6rem; color:rgba(255,255,255,0.2);">AM</span>`;
+                    td.style = `height: ${ROW_HEIGHT}px; border-right:1px solid rgba(255,255,255,0.1); width: ${COL_WIDTH}px; min-width: ${COL_WIDTH}px; padding:0; vertical-align:middle;`;
+                    td.innerHTML = `<span style="font-size:0.6rem; color:rgba(255,255,255,0.15);">AM</span>`;
                     trAM.appendChild(td);
                 }
                 tbody.appendChild(trAM);
@@ -1760,10 +1768,12 @@
                 // PM Row
                 const trPM = document.createElement('tr');
                 trPM.className = 'row-day-end';
+                trPM.style.height = ROW_HEIGHT + 'px';
+
                 for (let j = 0; j < 9; j++) {
                     const td = document.createElement('td');
-                    td.style = `border-right:1px solid rgba(255,255,255,0.1); width: ${COL_WIDTH}px; min-width: ${COL_WIDTH}px;`;
-                    td.innerHTML = `<span style="font-size:0.6rem; color:rgba(255,255,255,0.2);">PM</span>`;
+                    td.style = `height: ${ROW_HEIGHT}px; border-right:1px solid rgba(255,255,255,0.1); width: ${COL_WIDTH}px; min-width: ${COL_WIDTH}px; padding:0; vertical-align:middle;`;
+                    td.innerHTML = `<span style="font-size:0.6rem; color:rgba(255,255,255,0.15);">PM</span>`;
                     trPM.appendChild(td);
                 }
                 tbody.appendChild(trPM);
@@ -1777,21 +1787,12 @@
             const { residents } = localData;
             const overlay = document.getElementById('mobile-resident-overlay');
 
-            // Dimensions (Compact)
-            const ROW_HEIGHT = 24; // Reduced from 30
-            const DAY_HEIGHT = 48; // ROW_HEIGHT * 2
-            const COL_WIDTH = 120; // Reduced from 160
-            const DATE_COL_WIDTH = 100; // Reduced from 140
-            const HEADER_HEIGHT = 60; // Keep header height same or reduce? Let's check CSS. TH padding is 12px+16px vertical, font size.
-            // Actually the TH height is determined by CSS padding.
-            // Let's assume the sticky header height remains roughly same, but the blocks top offset needs to match.
-            // The header in CSS has padding-top/bottom 16px.
-            // Wait, the previous logic used `+ 60` hardcoded for header offset.
-            // If I shrink the table cells, the header height might slightly change due to text wrapping or just remain similar if padding dictates it.
-            // But let's stick to the previous offset logic, maybe slightly less if font is smaller?
-            // Actually, let's keep HEADER_OFFSET = 60 for safety or measure it.
-            // Ideally should match the actual header height.
-            // For now I will keep it 60 as the padding didn't change (16px top + 16px bottom + text height ~20px + border ~ 53-55px). 60 is safe.
+            // Dimensions (Refined)
+            const ROW_HEIGHT = 30;
+            const DAY_HEIGHT = 60;
+            const COL_WIDTH = 120;
+            const DATE_COL_WIDTH = 90; // Matches grid
+            const HEADER_HEIGHT = 60;
 
             const ROOM_MAP = {
                 'P209': 0, 'P306': 1, 'P307': 2, 'P507': 3, 'FG406': 4,
@@ -1813,7 +1814,7 @@
                 const diffTime = checkIn - startDate;
                 const offsetDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
                 const isPM = r.checkInTime === 'PM' || (!r.checkInTime);
-                let topPx = (offsetDays * DAY_HEIGHT) + 60 + (isPM ? ROW_HEIGHT : 0);
+                let topPx = (offsetDays * DAY_HEIGHT) + HEADER_HEIGHT + (isPM ? ROW_HEIGHT : 0);
 
                 if (!r.slots) r.slots = (r.nights || 1) * 2;
                 let heightPx = (r.slots * ROW_HEIGHT);
@@ -1828,16 +1829,17 @@
                 div.className = `resident-block ${r.status === 'hotel' ? 'status-hotel' : ''} ${r.locked ? 'block-locked' : ''} ${colorClass} ${typeClass}`;
                 div.style.top = topPx + 'px';
                 div.style.left = leftPx + 'px';
-                div.style.width = (COL_WIDTH - 8) + 'px'; // Reduced gap
-                div.style.height = (heightPx - 4) + 'px'; // Reduced gap
+                div.style.width = (COL_WIDTH - 6) + 'px'; // Less gap
+                div.style.height = (heightPx - 4) + 'px';
 
-                div.innerHTML = `<div style="pointer-events:none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.locked ? '🔒 ' : ''}${r.name}</div>`;
-                div.style.fontSize = '0.85rem'; // Smaller font
-                div.style.padding = '2px 4px'; // Smaller padding
+                div.innerHTML = `<div style="pointer-events:none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: ${ROW_HEIGHT}px;">${r.locked ? '🔒 ' : ''}${r.name}</div>`;
+                div.style.fontSize = '0.9rem'; // Readable size
+                div.style.padding = '0 6px';
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
 
                 div.dataset.id = r.id;
 
-                // Touch Events for Drag & Long Press
                 div.addEventListener('touchstart', handleTouchStart, { passive: false });
                 div.addEventListener('touchmove', handleTouchMove, { passive: false });
                 div.addEventListener('touchend', handleTouchEnd);
@@ -1910,11 +1912,11 @@
                 return;
             }
 
-            // Snap Logic (Compact)
+            // Snap Logic (Refined)
             const HEADER_HEIGHT = 60;
-            const ROW_HEIGHT = 24;
+            const ROW_HEIGHT = 30; // Matches Render
             const COL_WIDTH = 120;
-            const DATE_COL_WIDTH = 100;
+            const DATE_COL_WIDTH = 90;
             const SNAP_STEP = ROW_HEIGHT;
 
             const currentTop = parseFloat(touchDragEl.style.top);
