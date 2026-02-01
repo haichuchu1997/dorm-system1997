@@ -4022,7 +4022,10 @@
 
             updateFinancials(r);
 
-            console.log(`Moved ${r.name} to ${r.room}, ${r.checkIn} ${r.checkInTime}`);
+            // Recalculate slots using unified function
+            r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
+
+            console.log(`Moved ${r.name} to ${r.room}, ${r.checkIn} ${r.checkInTime}, slots: ${r.slots}`);
 
             // Firestoreに保存
             if (db) {
@@ -5013,7 +5016,6 @@
                 if (idx < 0) idx = rooms.length - 1;
                 if (idx >= rooms.length) idx = 0;
                 r.room = rooms[idx];
-
                 // Auto status update
                 if (r.room.includes('Hotel')) r.status = 'hotel';
                 else r.status = 'dorm';
@@ -5023,28 +5025,34 @@
             r.checkIn = start.toISOString();
             r.checkOut = end.toISOString();
 
-            // Recalc Slots logic
-            r.slots = Math.ceil((end - start) / (1000 * 60 * 60 * 12));
+            // Update checkInTime based on new start time
+            r.checkInTime = start.getHours() < 12 ? 'AM' : 'PM';
 
-            // UI Update Immediate & Sync
-            // renderMobileV2(); // refreshAllViews calls this
-            // openV2Panel(v2SelectedId); // Refresh panel info
+            // Recalculate slots using unified function (extract date part from ISO string)
+            const checkInDate = r.checkIn.split('T')[0];
+            const checkOutDate = r.checkOut.split('T')[0];
+            r.slots = calculateSlots(checkInDate, checkOutDate, r.checkInTime);
 
-            // DB Update
+            // DB Update with await for proper synchronization
             if (db) {
-                db.collection('residents').doc(r.id).update({
+                await db.collection('residents').doc(r.id).update({
                     checkIn: r.checkIn,
                     checkOut: r.checkOut,
                     room: r.room,
                     status: r.status,
+                    checkInTime: r.checkInTime,
                     locked: r.locked || false,
                     slots: r.slots
                 });
+                // Firebaseリスナーが自動的にUIを更新するため、
+                // ここでは手動でUIを更新せず、リスナーに任せる
+                console.log('Updated resident in Firebase:', r.id);
+            } else {
+                // Demo mode: update local data
+                saveData();
+                refreshAllViews();
+                openV2Panel(v2SelectedId);
             }
-
-            saveData();
-            refreshAllViews();
-            openV2Panel(v2SelectedId); // Re-open to update panel info
         }
 
         function refreshAllViews() {
