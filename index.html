@@ -1008,11 +1008,13 @@
         <div class="mobile-nav-tabs">
             <div class="mobile-nav-tab active" onclick="switchMobileTab('form')">📝 申請</div>
             <div class="mobile-nav-tab" onclick="switchMobileTab('matrix')">📊 空室状況</div>
+            <div class="mobile-nav-tab" onclick="switchMobileTab('edit')">✏️ 編集</div>
         </div>
 
         <!-- Input Form -->
         <div id="mobile-form-view" class="mobile-card">
             <form id="entry-form" onsubmit="submitEntry(event)">
+                <input type="hidden" id="m-edit-id" value=""> <!-- Hidden ID for Editing -->
                 <div class="input-group">
                     <label>氏名 / Full Name</label>
                     <input type="text" id="m-name" placeholder="山田 太郎" required autocomplete="name">
@@ -1052,6 +1054,11 @@
                     <button type="submit" class="btn btn-primary w-full" id="m-submit-btn">
                         申請を確定する
                     </button>
+                    <button type="button" class="btn w-full hidden" id="m-cancel-edit-btn"
+                        style="margin-top: 12px; border: 1px solid var(--danger); color: var(--danger);"
+                        onclick="resetMobileForm()">
+                        編集をキャンセル
+                    </button>
                     <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 16px;">
                         ※ 空室状況により自動的にホテル手配となります
                     </p>
@@ -1074,6 +1081,19 @@
                     style="padding: 10px 20px; font-size: 0.9rem;">
                     先30日分を追加表示
                 </button>
+            </div>
+        </div>
+
+        <!-- Edit List View -->
+        <div id="mobile-edit-view" class="mobile-matrix-container hidden"
+            style="background: transparent; border: none; height: auto; max-height: none; overflow: visible;">
+            <div style="margin-bottom: 16px;">
+                <input type="text" id="m-search" placeholder="名前で検索..." class="input"
+                    style="width: 100%; padding: 12px; border-radius: 12px; background: var(--bg-glass); border: 1px solid rgba(255,255,255,0.1); color: #fff;"
+                    onkeyup="renderMobileEditList()">
+            </div>
+            <div id="mobile-edit-list" style="display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px;">
+                <!-- Populated by JS -->
             </div>
         </div>
 
@@ -1445,7 +1465,9 @@
                 renderDebounceTimer = setTimeout(() => {
                     updateDashboard();
                     if (document.getElementById('sect-matrix')) renderMatrix();
+                    // Update Mobile Views
                     if (document.getElementById('mobile-matrix-table-container')) renderMobileMatrix();
+                    if (document.getElementById('mobile-edit-list')) renderMobileEditList();
                 }, 10);
             }, (error) => {
                 console.error('Residents listener error:', error);
@@ -1619,16 +1641,91 @@
             const tabs = document.querySelectorAll('.mobile-nav-tab');
             tabs.forEach(t => t.classList.remove('active'));
 
+            document.getElementById('mobile-form-view').classList.add('hidden');
+            document.getElementById('mobile-matrix-view').classList.add('hidden');
+            document.getElementById('mobile-edit-view').classList.add('hidden');
+
             if (tab === 'form') {
                 tabs[0].classList.add('active');
                 document.getElementById('mobile-form-view').classList.remove('hidden');
-                document.getElementById('mobile-matrix-view').classList.add('hidden');
             } else if (tab === 'matrix') {
                 tabs[1].classList.add('active');
-                document.getElementById('mobile-form-view').classList.add('hidden');
                 document.getElementById('mobile-matrix-view').classList.remove('hidden');
                 renderMobileMatrix();
+            } else if (tab === 'edit') {
+                tabs[2].classList.add('active');
+                document.getElementById('mobile-edit-view').classList.remove('hidden');
+                renderMobileEditList();
             }
+        }
+
+        function renderMobileEditList() {
+            const container = document.getElementById('mobile-edit-list');
+            if (!container) return;
+
+            const searchText = document.getElementById('m-search').value.toLowerCase();
+            const { residents } = localData;
+
+            // Sort by checkIn desc
+            const sorted = [...residents].sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
+
+            let html = '';
+
+            sorted.forEach(r => {
+                if (searchText && !r.name.toLowerCase().includes(searchText)) return;
+
+                const statusColor = r.status === 'dorm' ? 'var(--primary)' : 'var(--danger)';
+                const statusLabel = r.status === 'dorm' ? 'DORM' : 'HOTEL';
+
+                html += `
+                <div class="mobile-card" style="padding: 16px; margin-bottom: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <div>
+                            <span style="font-size: 0.7rem; font-weight: 700; color: ${statusColor}; border: 1px solid ${statusColor}; padding: 2px 6px; border-radius: 4px;">${statusLabel}</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); margin-left: 8px;">${r.room || '-'}</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">${r.checkIn} ~ ${r.checkOut}</div>
+                    </div>
+                    <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">${r.name}</div>
+                    
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem;" onclick="goToEditForm('${r.id}')">編集</button>
+                        <button class="btn" style="flex: 1; padding: 8px; font-size: 0.85rem; background: rgba(255, 42, 109, 0.1); border: 1px solid var(--danger); color: var(--danger);" onclick="deleteRecord('${r.id}')">削除</button>
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function goToEditForm(id) {
+            const r = localData.residents.find(res => res.id == id);
+            if (!r) return;
+
+            document.getElementById('m-edit-id').value = r.id;
+            document.getElementById('m-name').value = r.name;
+            document.getElementById('m-checkin').value = r.checkIn;
+            document.getElementById('m-checkout').value = r.checkOut;
+            document.getElementById('m-room').value = r.room;
+            document.getElementById('m-color').value = r.color || 'default';
+
+            // Change UI state
+            document.getElementById('m-submit-btn').innerText = "変更を保存する";
+            document.getElementById('m-cancel-edit-btn').classList.remove('hidden');
+
+            switchMobileTab('form');
+        }
+
+        function resetMobileForm() {
+            document.getElementById('entry-form').reset();
+            document.getElementById('m-edit-id').value = "";
+            document.getElementById('m-submit-btn').innerText = "申請を確定する";
+            document.getElementById('m-cancel-edit-btn').classList.add('hidden');
+
+            // Set default date again
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('m-checkin').value = today;
         }
 
         function renderMobileMatrix() {
@@ -1788,14 +1885,35 @@
                 checkInTime: 'PM' // デフォルトはPM
             };
 
-            // 3. Save
+            // 3. Save (Create or Update)
             if (db) {
-                await db.collection('residents').add(finalRecord);
+                const editId = document.getElementById('m-edit-id').value;
+                if (editId) {
+                    // Update
+                    const { id, ...updateData } = { ...finalRecord, id: editId }; // Ensure no ID in data
+                    await db.collection('residents').doc(editId).update(sanitizeData(updateData));
+                    console.log("Updated record:", editId);
+                } else {
+                    // Create
+                    await db.collection('residents').add(finalRecord);
+                }
             } else {
-                localData.residents.push(finalRecord); // Demo
+                const editId = document.getElementById('m-edit-id').value;
+                if (editId) {
+                    // Update Local
+                    const idx = localData.residents.findIndex(r => r.id == editId);
+                    if (idx !== -1) {
+                        localData.residents[idx] = { ...localData.residents[idx], ...finalRecord };
+                    }
+                } else {
+                    localData.residents.push(finalRecord); // Demo
+                }
                 // Simulate network delay
                 await new Promise(r => setTimeout(r, 800));
             }
+
+            // Reset form mode
+            resetMobileForm();
 
             // 4. Refresh data to update both PC and mobile matrix views
             await refreshData();
@@ -1861,8 +1979,13 @@
                 renderMatrix(); // Ensure PC Matrix view is updated
             }
             // Update Mobile Matrix if visible
-            if (document.getElementById('mobile-matrix-table-container')) {
-                renderMobileMatrix(); // Ensure Mobile Matrix view is updated
+            // Update Mobile Matrix if visible
+            if (document.getElementById('mobile-matrix-table-container') && !document.getElementById('mobile-matrix-view').classList.contains('hidden')) {
+                renderMobileMatrix();
+            }
+            // Update Mobile Edit List if visible
+            if (document.getElementById('mobile-edit-list') && !document.getElementById('mobile-edit-view').classList.contains('hidden')) {
+                renderMobileEditList();
             }
         }
 
