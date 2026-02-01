@@ -1863,6 +1863,7 @@
 
             // Filter Logic
             const filteredResidents = residents.filter(r => {
+                if (r.type === 'cleaning' || r.type === 'cleaning-done') return false; // Exclude cleaning from list
                 if (!filter || filter === 'all') return true;
                 return r.status === filter; // 'hotel' etc
             });
@@ -1876,6 +1877,8 @@
             currentHotel = 0;
 
             residents.forEach(r => {
+                if (r.type === 'cleaning' || r.type === 'cleaning-done') return; // Exclude cleaning from stats
+
                 // Use same date parsing method as renderBlocks to avoid timezone issues
                 const ciParts = r.checkIn.split('-');
                 const start = new Date(ciParts[0], ciParts[1] - 1, ciParts[2]);
