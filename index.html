@@ -2682,12 +2682,6 @@
                 hideContextMenu();
                 return;
             }
-            const idx = localData.residents.findIndex(res => res.id == menuResidentId);
-            if (idx === -1) {
-                hideContextMenu();
-                return;
-            }
-
             // 先にメニューを閉じてフラグを解除
             hideContextMenu();
 
