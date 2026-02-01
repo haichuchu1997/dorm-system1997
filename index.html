@@ -2685,15 +2685,21 @@
             // 先にメニューを閉じてフラグを解除
             hideContextMenu();
 
+            // Optimistic UI Update: Immediately remove from view
+            // This ensures it disappears visually even if DB sync has a tiny lag or fails silently
+            localData.residents = localData.residents.filter(res => res.id !== menuResidentId);
+            refreshData();
+
             // Firestoreから削除
             if (db) {
                 try {
-                    console.log('Deleting resident:', menuResidentId);
+                    console.log('Deleting resident (DB):', menuResidentId);
                     await db.collection('residents').doc(menuResidentId).delete();
-                    console.log('Successfully deleted resident');
+                    console.log('Successfully deleted resident from DB');
                 } catch (error) {
                     console.error('Error deleting resident:', error);
-                    alert('削除に失敗しました: ' + error.message);
+                    alert('データベースからの削除に失敗しました（画面上は消えました）: ' + error.message);
+                    // Re-fetch to restore if failed? Use autoInit logic or just wait for listener
                 }
             }
         }
