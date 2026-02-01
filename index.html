@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dormitory Management System</title>
 
     <!-- Fonts: Inter & Noto Sans JP -->
@@ -183,32 +183,42 @@
            -----------------------------------------------------------------
            Simple, One-handed, Foolproof
         ================================================================= */
+        /* =================================================================
+           MOBILE UI (Smartphone) - User Logic 
+           -----------------------------------------------------------------
+           Simple, One-handed, Foolproof
+        ================================================================= */
         #mobile-wrapper {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            padding: 24px;
+            justify-content: flex-start;
+            /* Changed from center to allow scrolling if needed */
+            padding: 20px;
             background: linear-gradient(135deg, var(--bg-dark) 0%, #171d29 100%);
+            font-size: 16px;
+            /* Base font size boost */
         }
 
         .mobile-card {
             background: var(--bg-glass);
             backdrop-filter: blur(20px);
             border-radius: var(--radius-lg);
-            padding: 32px 24px;
+            padding: 24px 20px;
             border: var(--border-light);
             box-shadow: var(--shadow-card);
             animation: slideUp 0.6s var(--ease-out);
+            margin-bottom: 24px;
         }
 
         .brand-header {
-            margin-bottom: 32px;
+            margin-bottom: 24px;
             text-align: center;
+            margin-top: 20px;
         }
 
         .brand-logo {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 800;
             background: linear-gradient(90deg, #fff, var(--text-muted));
             background-clip: text;
@@ -218,7 +228,7 @@
         }
 
         .brand-sub {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -240,19 +250,21 @@
         /* Mobile Navigation Tabs */
         .mobile-nav-tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
+            gap: 12px;
+            margin-bottom: 20px;
             background: rgba(0, 0, 0, 0.3);
-            padding: 8px;
+            padding: 6px;
             border-radius: 16px;
         }
 
         .mobile-nav-tab {
             flex: 1;
-            padding: 12px 16px;
+            padding: 14px 16px;
+            /* Larger touch target */
             text-align: center;
             border-radius: 12px;
-            font-size: 0.85rem;
+            font-size: 1rem;
+            /* Larger text */
             font-weight: 600;
             color: var(--text-muted);
             cursor: pointer;
@@ -274,67 +286,88 @@
             backdrop-filter: blur(20px);
             border-radius: var(--radius-lg);
             border: var(--border-light);
-            height: calc(100vh - 280px);
-            /* 画面の高さに合わせて調整 */
-            max-height: 600px;
+            height: calc(100vh - 220px);
+            /* Taller area */
+            max-height: 800px;
+            overflow: hidden;
+            /* Contain scroll */
         }
 
         .mobile-matrix-scroll-area {
             flex: 1;
-            overflow-x: auto;
-            overflow-y: auto;
+            overflow: auto;
             -webkit-overflow-scrolling: touch;
-            padding: 16px;
+            padding: 0;
+            /* Remove padding to let table hit edges */
         }
 
+        /* Custom Scrollbar for matrix */
         .mobile-matrix-scroll-area::-webkit-scrollbar {
-            height: 8px;
-            width: 8px;
+            height: 6px;
+            width: 6px;
         }
 
         .mobile-matrix-scroll-area::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
         }
 
         .mobile-matrix-scroll-area::-webkit-scrollbar-thumb {
             background: var(--primary);
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         .mobile-matrix-scroll-area table {
-            min-width: 100%;
-            font-size: 0.75rem;
+            width: 100%;
+            font-size: 0.9rem;
+            /* Increased from 0.75rem */
+            border-collapse: separate;
+            /* Allow sticky to work better */
+            border-spacing: 0;
         }
 
         .mobile-matrix-scroll-area th,
         .mobile-matrix-scroll-area td {
-            padding: 8px 6px;
+            padding: 12px 8px;
+            /* More padding */
             text-align: center;
             white-space: nowrap;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .mobile-matrix-scroll-area th {
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             position: sticky;
             top: 0;
             background: var(--bg-panel);
-            z-index: 10;
+            /* Ensure opacity */
+            z-index: 20;
+            padding-top: 16px;
+            padding-bottom: 16px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         .mobile-matrix-scroll-area td:first-child {
             position: sticky;
             left: 0;
             background: var(--bg-panel);
-            z-index: 5;
-            font-weight: 600;
+            z-index: 10;
+            font-weight: 700;
+            color: var(--text-muted);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.8rem;
+        }
+
+        /* Fix corner z-index */
+        .mobile-matrix-scroll-area th:first-child {
+            z-index: 30;
+            left: 0;
         }
 
         .mobile-matrix-footer {
-            padding: 12px 16px;
+            padding: 16px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             background: var(--bg-panel);
-            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+            flex-shrink: 0;
         }
 
         @keyframes slideUp {
@@ -1596,13 +1629,13 @@
             today.setHours(0, 0, 0, 0);
             const totalDormRooms = localData.settings.totalRooms || 5;
 
-            let html = '<table class="matrix-table" style="width: 100%; border-collapse: collapse;">';
+            let html = '<table class="matrix-table">';
 
             // Header
-            html += '<thead><tr style="background: var(--bg-panel);">';
-            html += '<th style="min-width: 70px;">日付</th>';
+            html += '<thead><tr>';
+            html += '<th>日付</th>';
             rooms.forEach(room => {
-                html += `<th style="min-width: 60px;">${room}</th>`;
+                html += `<th>${room}</th>`;
             });
             html += '</tr></thead><tbody>';
 
@@ -1610,17 +1643,23 @@
             for (let i = 0; i < mobileMatrixDays; i++) {
                 const date = new Date(today);
                 date.setDate(date.getDate() + i);
-                // ローカル日付を正しく取得（タイムゾーンオフセットを考慮）
+
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
                 const dateStr = `${year}-${month}-${day}`;
-                const displayDate = `${date.getMonth() + 1}/${date.getDate()}`;
+
+                // Day of week
+                const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                const dateColor = date.getDay() === 0 ? '#ff4d4f' : (date.getDay() === 6 ? '#40a9ff' : 'var(--text-muted)');
+
+                const displayDate = `${date.getMonth() + 1}/${date.getDate()} <span style="font-size:0.75em">(${dayOfWeek})</span>`;
 
                 html += '<tr>';
-                html += `<td style="background: var(--bg-panel); font-weight: 600; font-size: 0.75rem;">${displayDate}</td>`;
+                html += `<td style="color:${dateColor}">${displayDate}</td>`;
 
-                // その日の寮の使用中部屋数をカウント
+                // Calculate availability for the whole dorm
                 const occupiedOnDate = localData.residents.filter(r => {
                     if (r.status !== 'dorm') return false;
                     const checkIn = new Date(r.checkIn);
@@ -1644,15 +1683,28 @@
                     });
 
                     if (occupied.length > 0) {
-                        // 使用中：●（クリックで使用者名表示）
+                        // Occupied: ●
                         const names = occupied.map(r => r.name).join(', ');
-                        html += `<td style="background: rgba(0, 240, 255, 0.2); color: var(--primary); font-weight: 600; font-size: 0.7rem; cursor: pointer;" onclick="viewOccupiedCell('${names.replace(/'/g, "\\'")}')">●</td>`;
+                        // Use a large dot with primary color background/glow effect
+                        html += `<td onclick="viewOccupiedCell('${names.replace(/'/g, "\\'")}')">
+                            <span style="
+                                display:inline-flex; align-items:center; justify-content:center;
+                                width:32px; height:32px; background:rgba(0, 240, 255, 0.2); 
+                                color:var(--primary); border-radius:50%; font-size:1.2rem;">●</span>
+                        </td>`;
                     } else if (isAvailable) {
-                        // 空室あり：○（クリックで申請画面へ）
-                        html += `<td style="color: var(--success); font-weight: 600; font-size: 0.7rem; cursor: pointer;" onclick="goToApplicationForm('${dateStr}', '${room}')">○</td>`;
+                        // Available: ○
+                        html += `<td onclick="goToApplicationForm('${dateStr}', '${room}')">
+                            <span style="
+                                display:inline-flex; align-items:center; justify-content:center;
+                                width:32px; height:32px;
+                                color:var(--success); font-size:1.5rem; font-weight:300;">○</span>
+                        </td>`;
                     } else {
-                        // 満室：×
-                        html += '<td style="color: var(--danger); font-weight: 600; font-size: 0.7rem;">×</td>';
+                        // Full: ×
+                        html += `<td>
+                             <span style="color:var(--danger); font-size:1.2rem;">×</span>
+                        </td>`;
                     }
                 });
 
