@@ -2280,6 +2280,13 @@
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + daysToShow);
 
+            // === 重複検出用データ構造 ===
+            // 各部屋、各日付、各AM/PMにどの予約があるかを記録
+            const occupancyMap = {}; // Key: "colIdx-dayOffset-ampm" => [residentIds...]
+
+            // ブロック情報を事前計算
+            const blockInfos = [];
+
             residents.forEach(r => {
                 const ciParts = r.checkIn.split('-');
                 const checkIn = new Date(ciParts[0], ciParts[1] - 1, ciParts[2]);
@@ -2293,11 +2300,51 @@
                 const diffTime = checkIn - startDate;
                 const offsetDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
                 const isPM = r.checkInTime === 'PM' || (!r.checkInTime);
-                let topPx = (offsetDays * DAY_HEIGHT) + HEADER_HEIGHT + (isPM ? ROW_HEIGHT : 0);
+                const topPx = (offsetDays * DAY_HEIGHT) + HEADER_HEIGHT + (isPM ? ROW_HEIGHT : 0);
 
                 if (!r.slots) r.slots = (r.nights || 1) * 2;
-                let heightPx = (r.slots * ROW_HEIGHT);
-                let leftPx = (colIndex * COL_WIDTH) + DATE_COL_WIDTH;
+                const heightPx = (r.slots * ROW_HEIGHT);
+
+                // Store block info
+                blockInfos.push({
+                    resident: r,
+                    colIndex,
+                    offsetDays,
+                    isPM,
+                    topPx,
+                    heightPx,
+                    slots: r.slots
+                });
+
+                // Record occupancy for overlap detection
+                for (let slot = 0; slot < r.slots; slot++) {
+                    const slotDayOffset = offsetDays + Math.floor(slot / 2);
+                    const slotAmPm = (isPM && slot === 0) ? 'pm' : ((slot % 2 === 0) ? 'am' : 'pm');
+                    const key = `${colIndex}-${slotDayOffset}-${slotAmPm}`;
+
+                    if (!occupancyMap[key]) occupancyMap[key] = [];
+                    occupancyMap[key].push(r.id);
+                }
+            });
+
+            // === 繰り返しカウンターを使ってオフセットを割り当て ===
+            const offsetCounters = {}; // colIndex => current offset count
+
+            blockInfos.forEach(info => {
+                const { resident: r, colIndex, topPx, heightPx } = info;
+
+                // このブロックが何番目の重複かを判定
+                if (!offsetCounters[colIndex]) offsetCounters[colIndex] = 0;
+                const overlapIndex = offsetCounters[colIndex];
+                offsetCounters[colIndex]++;
+
+                // 横方向のオフセットを適用
+                const OVERLAP_OFFSET = 35; // 横に35pxずらす
+                const baseLeftPx = (colIndex * COL_WIDTH) + DATE_COL_WIDTH;
+                const leftPx = baseLeftPx + (overlapIndex * OVERLAP_OFFSET);
+
+                // 幅を調整（重なっている場合は少し狭く）
+                const widthPx = COL_WIDTH - 6 - (overlapIndex * 10);
 
                 // Create Block
                 const div = document.createElement('div');
@@ -2308,8 +2355,13 @@
                 div.className = `resident-block ${r.status === 'hotel' ? 'status-hotel' : ''} ${r.locked ? 'block-locked' : ''} ${colorClass} ${typeClass}`;
                 div.style.top = topPx + 'px';
                 div.style.left = leftPx + 'px';
-                div.style.width = (COL_WIDTH - 6) + 'px'; // Less gap
+                div.style.width = widthPx + 'px';
                 div.style.height = (heightPx - 4) + 'px';
+
+                // 重なっている場合はz-indexを調整
+                if (overlapIndex > 0) {
+                    div.style.zIndex = 10 + overlapIndex;
+                }
 
                 div.innerHTML = `<div style="pointer-events:none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: ${ROW_HEIGHT}px;">${r.locked ? '🔒 ' : ''}${r.name}</div>`;
                 div.style.fontSize = '0.9rem'; // Readable size
@@ -3060,7 +3112,6 @@
                 }
                 tbody.appendChild(trPM);
             }
-
             // 2. Render Blocks (Overlay)
             renderBlocks(today, daysToShow);
         }
@@ -3081,6 +3132,11 @@
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + daysToShow);
 
+            // === 重複検出用カウンター ===
+            const offsetCounters = {}; // colIndex => current offset count
+            const blockInfos = [];
+
+            // ブロック情報を事前計算
             residents.forEach(r => {
                 const ciParts = r.checkIn.split('-');
                 const checkIn = new Date(ciParts[0], ciParts[1] - 1, ciParts[2]);
@@ -3092,32 +3148,44 @@
                 if (checkOut <= startDate || checkIn >= endDate) return;
 
                 // Calculate Position based on Room
-                // Fallback if room not in map (e.g. legacy data issue), or use first free slot logic if we were advanced
                 const colIndex = roomMap[r.room] !== undefined ? roomMap[r.room] : 0;
 
                 // Calculate Vertical Position (Days)
-                // Diff from startDate
                 const diffTime = checkIn - startDate;
                 const offsetDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-                // Clip start/end to view
-                let renderStartDay = offsetDays;
-                let renderDuration = r.nights;
-
-                // Adjust for view boundaries logic could go here, but CSS overflow:hidden handles cropping usually.
-                // However, 'top' can be negative if started before today.
-
                 // Match the visual slot (AM or PM) based on data
-                // DayRowIndex = offsetDays * 2
-                // if checkInTime is PM, add +1 ROW_HEIGHT (30px)
                 const isPM = r.checkInTime === 'PM' || (!r.checkInTime); // Default to PM if not set
-                let topPx = (offsetDays * DAY_HEIGHT) + 60 + (isPM ? ROW_HEIGHT : 0);
+                const topPx = (offsetDays * DAY_HEIGHT) + 60 + (isPM ? ROW_HEIGHT : 0);
 
                 // Calculate height based on slots (1 slot = 30px)
                 if (!r.slots) r.slots = (r.nights || 1) * 2;
-                let heightPx = (r.slots * ROW_HEIGHT);
+                const heightPx = (r.slots * ROW_HEIGHT);
 
-                let leftPx = (colIndex * COL_WIDTH) + DATE_COL_WIDTH;
+                blockInfos.push({
+                    resident: r,
+                    colIndex,
+                    topPx,
+                    heightPx
+                });
+            });
+
+            // === ブロックを描画（重複対応） ===
+            blockInfos.forEach(info => {
+                const { resident: r, colIndex, topPx, heightPx } = info;
+
+                // この部屋の何番目のブロックかを判定
+                if (!offsetCounters[colIndex]) offsetCounters[colIndex] = 0;
+                const overlapIndex = offsetCounters[colIndex];
+                offsetCounters[colIndex]++;
+
+                // 横方向のオフセットを適用
+                const OVERLAP_OFFSET = 45; // PC版は45pxずらす
+                const baseLeftPx = (colIndex * COL_WIDTH) + DATE_COL_WIDTH;
+                const leftPx = baseLeftPx + (overlapIndex * OVERLAP_OFFSET);
+
+                // 幅を調整（重なっている場合は少し狭く）
+                const widthPx = COL_WIDTH - 12 - (overlapIndex * 12);
 
                 // Create Block
                 const div = document.createElement('div');
@@ -3130,8 +3198,13 @@
                 div.className = `resident-block ${r.status === 'hotel' ? 'status-hotel' : ''} ${r.locked ? 'block-locked' : ''} ${colorClass} ${typeClass}`;
                 div.style.top = topPx + 'px';
                 div.style.left = leftPx + 'px';
-                div.style.width = (COL_WIDTH - 12) + 'px';
+                div.style.width = widthPx + 'px';
                 div.style.height = (heightPx - 8) + 'px';
+
+                // 重なっている場合はz-indexを調整
+                if (overlapIndex > 0) {
+                    div.style.zIndex = 10 + overlapIndex;
+                }
 
                 // Add locked icon if needed
                 div.innerHTML = `<div style="pointer-events:none;">${r.locked ? '🔒 ' : ''}${r.name}</div>`;
