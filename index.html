@@ -1399,6 +1399,125 @@
         .modal-overlay.open .modal-box {
             transform: scale(1);
         }
+
+        /* 十字コントローラー UI */
+        #d-pad-overlay {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 180px;
+            height: 180px;
+            z-index: 10000;
+            display: none;
+            /* デフォルト非表示 */
+            pointer-events: none;
+            /* エリア外のタッチを透過 */
+        }
+
+        #d-pad-overlay.active {
+            display: block;
+        }
+
+        .d-pad-container {
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 20, 35, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            pointer-events: auto;
+            /* コントローラー自体のタッチは有効 */
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #d-pad-overlay.active .d-pad-container {
+            transform: scale(1);
+        }
+
+        .d-pad-btn {
+            background: transparent;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.1s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .d-pad-btn:active {
+            background: rgba(0, 240, 255, 0.2);
+            color: #fff;
+        }
+
+        .d-pad-up {
+            grid-column: 2;
+            grid-row: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .d-pad-left {
+            grid-column: 1;
+            grid-row: 2;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .d-pad-center {
+            grid-column: 2;
+            grid-row: 2;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            margin: 5px;
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .d-pad-right {
+            grid-column: 3;
+            grid-row: 2;
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .d-pad-down {
+            grid-column: 2;
+            grid-row: 3;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* 選択中のブロック */
+        .resident-block.selected {
+            box-shadow: 0 0 0 3px #fff, 0 0 15px var(--primary) !important;
+            z-index: 99999 !important;
+            /* 最前面 */
+            animation: pulse-border 1.5s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% {
+                box-shadow: 0 0 0 2px #fff, 0 0 10px var(--primary);
+            }
+
+            50% {
+                box-shadow: 0 0 0 4px #fff, 0 0 20px var(--primary);
+            }
+
+            100% {
+                box-shadow: 0 0 0 2px #fff, 0 0 10px var(--primary);
+            }
+        }
     </style>
 </head>
 
@@ -1523,6 +1642,10 @@
                 <button class="mobile-toolbar-btn" onclick="fitMobileView()" title="表示最適化">
                     <span class="mobile-toolbar-icon">🔍</span>
                     <span class="mobile-toolbar-label">最適表示</span>
+                </button>
+                <button class="mobile-toolbar-btn" onclick="toggleDPad()" title="コントローラー" id="btn-d-pad-toggle">
+                    <span class="mobile-toolbar-icon">🎮</span>
+                    <span class="mobile-toolbar-label">移動</span>
                 </button>
             </div>
 
@@ -2375,6 +2498,11 @@
 
                 div.dataset.id = r.id;
 
+                // 選択状態の反映
+                if (window.selectedBlockId === r.id) {
+                    div.classList.add('selected');
+                }
+
                 div.addEventListener('touchstart', handleTouchStart, { passive: false });
                 div.addEventListener('touchmove', handleTouchMove, { passive: false });
                 div.addEventListener('touchend', handleTouchEnd);
@@ -2416,6 +2544,9 @@
             elStartLeft = parseFloat(touchDragEl.style.left);
 
             scrollContainer = document.getElementById('mobile-edit-matrix-container'); // Scroll area
+
+            // タップでブロックを選択
+            selectResidentBlock(touchDragEl.dataset.id);
         }
 
         function handleTouchMove(e) {
@@ -4051,9 +4182,122 @@
         }
 
         // Run on load to ensure DOM is ready
+        // === 十字コントローラーロジック ===
+        window.selectedBlockId = null;
+
+        function selectResidentBlock(id) {
+            window.selectedBlockId = id;
+            // 全ブロックからselectedクラスを削除し、対象に追加（再描画せずDOM操作のみで軽量化）
+            document.querySelectorAll('.resident-block').forEach(el => {
+                if (el.dataset.id === id) el.classList.add('selected');
+                else el.classList.remove('selected');
+            });
+        }
+
+        function toggleDPad() {
+            const overlay = document.getElementById('d-pad-overlay');
+            overlay.classList.toggle('active');
+            const btn = document.getElementById('btn-d-pad-toggle');
+            if (overlay.classList.contains('active')) {
+                btn.style.background = 'rgba(0, 240, 255, 0.2)';
+            } else {
+                btn.style.background = '';
+            }
+        }
+
+        async function handleDPad(direction, event) {
+            if (event) {
+                event.preventDefault(); // タッチ時のスクロール防止等
+                event.stopPropagation();
+            }
+
+            if (!window.selectedBlockId) {
+                // 選択がない場合は通知のみ（または何もしない）
+                return;
+            }
+
+            const r = localData.residents.find(res => res.id == window.selectedBlockId);
+            if (!r) return;
+            if (r.locked) {
+                // ロック通知など
+                return;
+            }
+
+            // データ変更処理
+            let changed = false;
+
+            if (direction === 'up' || direction === 'down') {
+                // 日付移動
+                const diff = direction === 'down' ? 1 : -1;
+
+                const checkInDate = new Date(r.checkIn);
+                checkInDate.setDate(checkInDate.getDate() + diff);
+                r.checkIn = `${checkInDate.getFullYear()}-${(checkInDate.getMonth() + 1).toString().padStart(2, '0')}-${checkInDate.getDate().toString().padStart(2, '0')}`;
+
+                const checkOutDate = new Date(r.checkOut);
+                checkOutDate.setDate(checkOutDate.getDate() + diff);
+                r.checkOut = `${checkOutDate.getFullYear()}-${(checkOutDate.getMonth() + 1).toString().padStart(2, '0')}-${checkOutDate.getDate().toString().padStart(2, '0')}`;
+
+                changed = true;
+            }
+            else if (direction === 'left' || direction === 'right') {
+                // 部屋移動
+                const ROOM_LIST = ["P209", "P306", "P307", "P507", "FG406", "Hotel 1", "Hotel 2", "Hotel 3", "Hotel 4"];
+                let currentIdx = ROOM_LIST.indexOf(r.room);
+                if (currentIdx === -1) currentIdx = 0; // フォールバック
+
+                let newIdx = direction === 'right' ? currentIdx + 1 : currentIdx - 1;
+                // インデックス範囲制限
+                if (newIdx < 0) newIdx = 0;
+                if (newIdx >= ROOM_LIST.length) newIdx = ROOM_LIST.length - 1;
+
+                if (newIdx !== currentIdx) {
+                    r.room = ROOM_LIST[newIdx];
+                    r.status = r.room.startsWith('Hotel') ? 'hotel' : 'dorm';
+                    changed = true;
+                }
+            }
+
+            if (changed) {
+                // Firestore更新
+                if (db) {
+                    const { id, ...resData } = r;
+                    await db.collection('residents').doc(r.id).set(sanitizeData(resData), { merge: true });
+                }
+
+                // 再描画
+                refreshMobileEdit();
+
+                // 選択状態維持（再描画でDOMが作り直されるため再適用が必要だが、renderMobileInteractiveMatrix内で処理済み）
+
+                // スクロール追従（簡易実装）
+                setTimeout(() => {
+                    const el = document.querySelector(`.resident-block[data-id="${r.id}"]`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    }
+                }, 100);
+            }
+        }
+
+        // 自動初期化
         window.addEventListener('load', autoInit);
     </script>
 
+    <!-- 十字コントローラーオーバーレイ -->
+    <div id="d-pad-overlay">
+        <div class="d-pad-container">
+            <button class="d-pad-btn d-pad-up" ontouchstart="handleDPad('up', event)"
+                onmousedown="handleDPad('up', event)">▲</button>
+            <button class="d-pad-btn d-pad-left" ontouchstart="handleDPad('left', event)"
+                onmousedown="handleDPad('left', event)">◀</button>
+            <div class="d-pad-center">MOVE</div>
+            <button class="d-pad-btn d-pad-right" ontouchstart="handleDPad('right', event)"
+                onmousedown="handleDPad('right', event)">▶</button>
+            <button class="d-pad-btn d-pad-down" ontouchstart="handleDPad('down', event)"
+                onmousedown="handleDPad('down', event)">▼</button>
+        </div>
+    </div>
 </body>
 
 </html>
