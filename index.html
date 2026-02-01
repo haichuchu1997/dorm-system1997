@@ -1384,7 +1384,7 @@
                     if (renderDebounceTimer) clearTimeout(renderDebounceTimer);
                     renderDebounceTimer = setTimeout(() => {
                         updateDashboard();
-                    }, 500);
+                    }, 10);
                 }
             }, (error) => {
                 console.error('Settings listener error:', error);
@@ -1400,7 +1400,7 @@
                     updateDashboard();
                     if (document.getElementById('sect-matrix')) renderMatrix();
                     if (document.getElementById('mobile-matrix-table-container')) renderMobileMatrix();
-                }, 500);
+                }, 10);
             }, (error) => {
                 console.error('Residents listener error:', error);
             });
