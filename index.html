@@ -2571,8 +2571,8 @@
             r.nights = Math.ceil(r.slots / 2);
             updateFinancials(r);
 
-            // 先にメニューを閉じてフラグを解除
-            hideContextMenu();
+            // メニューを閉じない（連続操作のため）
+            // hideContextMenu();
 
             // Firestoreに保存
             if (db) {
