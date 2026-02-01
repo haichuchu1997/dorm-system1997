@@ -1718,10 +1718,14 @@
             };
             const roomNames = Object.keys(roomMap);
 
+            // Dimensions (Compact)
+            const COL_WIDTH = 120; // Reduced from 160
+            const DATE_COL_WIDTH = 100; // Reduced from 140
+
             // 1. Render Header
-            let headerHtml = '<tr><th style="min-width: 140px; position: sticky; left: 0; z-index: 40; background: var(--bg-panel);">日付</th>';
+            let headerHtml = `<tr><th style="min-width: ${DATE_COL_WIDTH}px; position: sticky; left: 0; z-index: 40; background: var(--bg-panel);">日付</th>`;
             roomNames.forEach(room => {
-                headerHtml += `<th style="min-width: 160px;">${room}</th>`;
+                headerHtml += `<th style="min-width: ${COL_WIDTH}px;">${room}</th>`;
             });
             headerHtml += '</tr>';
             thead.innerHTML = headerHtml;
@@ -1741,13 +1745,13 @@
                 const tdDate = document.createElement('td');
                 tdDate.className = 'sticky-left';
                 tdDate.rowSpan = 2;
-                tdDate.style = "font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; width: 140px; min-width: 140px;";
+                tdDate.style = `font-weight:bold; border-right:1px solid rgba(255,255,255,0.1); vertical-align:middle; width: ${DATE_COL_WIDTH}px; min-width: ${DATE_COL_WIDTH}px;`;
                 tdDate.innerText = dateStr;
                 trAM.appendChild(tdDate);
 
                 for (let j = 0; j < 9; j++) {
                     const td = document.createElement('td');
-                    td.style = "border-right:1px solid rgba(255,255,255,0.1); width: 160px; min-width: 160px;";
+                    td.style = `border-right:1px solid rgba(255,255,255,0.1); width: ${COL_WIDTH}px; min-width: ${COL_WIDTH}px;`;
                     td.innerHTML = `<span style="font-size:0.6rem; color:rgba(255,255,255,0.2);">AM</span>`;
                     trAM.appendChild(td);
                 }
@@ -1758,14 +1762,14 @@
                 trPM.className = 'row-day-end';
                 for (let j = 0; j < 9; j++) {
                     const td = document.createElement('td');
-                    td.style = "border-right:1px solid rgba(255,255,255,0.1); width: 160px; min-width: 160px;";
+                    td.style = `border-right:1px solid rgba(255,255,255,0.1); width: ${COL_WIDTH}px; min-width: ${COL_WIDTH}px;`;
                     td.innerHTML = `<span style="font-size:0.6rem; color:rgba(255,255,255,0.2);">PM</span>`;
                     trPM.appendChild(td);
                 }
                 tbody.appendChild(trPM);
             }
 
-            // 3. Render Blocks (Overlay) - Logic mostly reused from PC `renderBlocks` but targeting mobile overlay
+            // 3. Render Blocks (Overlay)
             renderMobileBlocks(today, daysToShow);
         }
 
@@ -1773,12 +1777,23 @@
             const { residents } = localData;
             const overlay = document.getElementById('mobile-resident-overlay');
 
-            const ROW_HEIGHT = 30;
-            const DAY_HEIGHT = 60;
-            const COL_WIDTH = 160;
-            const DATE_COL_WIDTH = 140;
+            // Dimensions (Compact)
+            const ROW_HEIGHT = 24; // Reduced from 30
+            const DAY_HEIGHT = 48; // ROW_HEIGHT * 2
+            const COL_WIDTH = 120; // Reduced from 160
+            const DATE_COL_WIDTH = 100; // Reduced from 140
+            const HEADER_HEIGHT = 60; // Keep header height same or reduce? Let's check CSS. TH padding is 12px+16px vertical, font size.
+            // Actually the TH height is determined by CSS padding.
+            // Let's assume the sticky header height remains roughly same, but the blocks top offset needs to match.
+            // The header in CSS has padding-top/bottom 16px.
+            // Wait, the previous logic used `+ 60` hardcoded for header offset.
+            // If I shrink the table cells, the header height might slightly change due to text wrapping or just remain similar if padding dictates it.
+            // But let's stick to the previous offset logic, maybe slightly less if font is smaller?
+            // Actually, let's keep HEADER_OFFSET = 60 for safety or measure it.
+            // Ideally should match the actual header height.
+            // For now I will keep it 60 as the padding didn't change (16px top + 16px bottom + text height ~20px + border ~ 53-55px). 60 is safe.
 
-            const roomMap = {
+            const ROOM_MAP = {
                 'P209': 0, 'P306': 1, 'P307': 2, 'P507': 3, 'FG406': 4,
                 'Hotel 1': 5, 'Hotel 2': 6, 'Hotel 3': 7, 'Hotel 4': 8
             };
@@ -1794,11 +1809,11 @@
 
                 if (checkOut <= startDate || checkIn >= endDate) return;
 
-                const colIndex = roomMap[r.room] !== undefined ? roomMap[r.room] : 0;
+                const colIndex = ROOM_MAP[r.room] !== undefined ? ROOM_MAP[r.room] : 0;
                 const diffTime = checkIn - startDate;
                 const offsetDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
                 const isPM = r.checkInTime === 'PM' || (!r.checkInTime);
-                let topPx = (offsetDays * DAY_HEIGHT) + 60 + (isPM ? ROW_HEIGHT : 0); // +60 for header
+                let topPx = (offsetDays * DAY_HEIGHT) + 60 + (isPM ? ROW_HEIGHT : 0);
 
                 if (!r.slots) r.slots = (r.nights || 1) * 2;
                 let heightPx = (r.slots * ROW_HEIGHT);
@@ -1813,11 +1828,12 @@
                 div.className = `resident-block ${r.status === 'hotel' ? 'status-hotel' : ''} ${r.locked ? 'block-locked' : ''} ${colorClass} ${typeClass}`;
                 div.style.top = topPx + 'px';
                 div.style.left = leftPx + 'px';
-                div.style.width = (COL_WIDTH - 12) + 'px';
-                div.style.height = (heightPx - 8) + 'px';
+                div.style.width = (COL_WIDTH - 8) + 'px'; // Reduced gap
+                div.style.height = (heightPx - 4) + 'px'; // Reduced gap
 
-                div.innerHTML = `<div style="pointer-events:none;">${r.locked ? '🔒 ' : ''}${r.name}</div>`;
-                div.style.fontSize = '1rem';
+                div.innerHTML = `<div style="pointer-events:none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.locked ? '🔒 ' : ''}${r.name}</div>`;
+                div.style.fontSize = '0.85rem'; // Smaller font
+                div.style.padding = '2px 4px'; // Smaller padding
 
                 div.dataset.id = r.id;
 
@@ -1894,11 +1910,11 @@
                 return;
             }
 
-            // Snap Logic (Identical to PC but using different constants if needed, currently same)
+            // Snap Logic (Compact)
             const HEADER_HEIGHT = 60;
-            const ROW_HEIGHT = 30;
-            const COL_WIDTH = 160;
-            const DATE_COL_WIDTH = 140;
+            const ROW_HEIGHT = 24;
+            const COL_WIDTH = 120;
+            const DATE_COL_WIDTH = 100;
             const SNAP_STEP = ROW_HEIGHT;
 
             const currentTop = parseFloat(touchDragEl.style.top);
