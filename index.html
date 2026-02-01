@@ -2356,7 +2356,8 @@
                 div.style.top = topPx + 'px';
                 div.style.left = leftPx + 'px';
                 div.style.width = widthPx + 'px';
-                div.style.height = (heightPx - 4) + 'px';
+                div.style.height = (heightPx - 8) + 'px'; // より多くの余白を確保
+                div.style.boxSizing = 'border-box'; // パディングとボーダーを高さに含める
 
                 // 重なっている場合はz-indexを調整
                 if (overlapIndex > 0) {
@@ -3199,7 +3200,8 @@
                 div.style.top = topPx + 'px';
                 div.style.left = leftPx + 'px';
                 div.style.width = widthPx + 'px';
-                div.style.height = (heightPx - 8) + 'px';
+                div.style.height = (heightPx - 12) + 'px'; // PC版はより多くの余白
+                div.style.boxSizing = 'border-box'; // パディングとボーダーを高さに含める
 
                 // 重なっている場合はz-indexを調整
                 if (overlapIndex > 0) {
