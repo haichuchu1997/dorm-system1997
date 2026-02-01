@@ -1962,11 +1962,11 @@
                 <div class="panel-controls">
                     <!-- Date Control -->
                     <div class="ctrl-group">
-                        <div class="ctrl-label">DATE / 移動 (半日単位)</div>
+                        <div class="ctrl-label">DATE / 時間移動</div>
                         <div class="ctrl-row">
-                            <button class="ctrl-btn" onclick="handleV2Control('date', -0.5)">◀</button>
+                            <button class="ctrl-btn" onclick="handleV2Control('date', -0.5)">▲</button>
                             <span class="ctrl-value">MOVE</span>
-                            <button class="ctrl-btn" onclick="handleV2Control('date', 0.5)">▶</button>
+                            <button class="ctrl-btn" onclick="handleV2Control('date', 0.5)">▼</button>
                         </div>
                         <div class="ctrl-row">
                             <button class="ctrl-btn" onclick="handleV2Control('duration', -1)">-1</button>
@@ -2456,9 +2456,9 @@
                     if (document.getElementById('mobile-interactive-table') && !document.getElementById('mobile-edit-view').classList.contains('hidden')) {
                         renderMobileInteractiveMatrix();
                     }
-                    // Update V2 Mobile View
-                    if (document.getElementById('mobile-edit-view-v2') && !document.getElementById('mobile-edit-view-v2').classList.contains('hidden')) {
-                        if (typeof renderMobileV2 === 'function') renderMobileV2();
+                    // Update All Views (Mobile V2, PC, etc.)
+                    if (typeof refreshAllViews === 'function') {
+                        refreshAllViews();
                     }
                 }, 10);
             }, (error) => {
@@ -4924,14 +4924,14 @@
             if (type === 'date') {
                 // Helper to shift 1 slot (AM/PM)
                 const shiftSlot = (d, dir) => {
-                    if (dir > 0) { // Move forward
+                    if (dir > 0) { // Move forward (Down)
                         if (d.getHours() < 12) { // Currently AM, move to PM same day
                             d.setHours(15, 0, 0, 0);
                         } else { // Currently PM, move to AM next day
                             d.setDate(d.getDate() + 1);
                             d.setHours(10, 0, 0, 0);
                         }
-                    } else { // Move backward
+                    } else { // Move backward (Up)
                         if (d.getHours() >= 12) { // Currently PM, move to AM same day
                             d.setHours(10, 0, 0, 0);
                         } else { // Currently AM, move to PM previous day
@@ -4941,8 +4941,22 @@
                     }
                 };
 
-                // Apply shift to both start and end dates
                 const dir = delta > 0 ? 1 : -1;
+
+                // Guard: Check if moving before Today
+                if (dir < 0) {
+                    const testStart = new Date(start);
+                    shiftSlot(testStart, dir);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    if (testStart < today) {
+                        alert('今日より前の日付（過去）には移動できません。\n表示範囲外となります。');
+                        return;
+                    }
+                }
+
+                // Apply shift to both start and end dates
                 shiftSlot(start, dir);
                 shiftSlot(end, dir);
 
