@@ -1536,10 +1536,9 @@
 
         .mobile-v2-matrix {
             display: grid;
-            /* Date Column (100px) + 9 Rooms (120px) */
             grid-template-columns: 100px repeat(9, 120px);
-            /* Rows will be generated dynamically */
-            grid-auto-rows: 30px;
+            grid-auto-rows: 24px;
+            /* 30px -> 24px (1日48px) でコンパクトに */
             overflow: auto;
             position: relative;
             background: #1a1d24;
@@ -2469,8 +2468,19 @@
 
         // Placeholder for compatibility
         function refreshAllViews() {
-            // No-op in Firebase mode as listeners handle updates
-            console.log('refreshAllViews called - waiting for listener');
+            // 1. Mobile V2
+            renderMobileV2();
+
+            // 2. Mobile Matrix (Grid with circles)
+            if (document.getElementById('mobile-matrix-table-container')) {
+                renderMobileMatrix();
+            }
+
+            // 3. PC Matrix (if available) - check elements
+            if (typeof renderMatrix === 'function' && document.getElementById('matrix-table-body')) {
+                // PC版の要素が存在する場合のみ
+                renderMatrix();
+            }
         }
 
         function loadFromLocalStorage() {
@@ -4960,25 +4970,44 @@
             r.checkIn = start.toISOString();
             r.checkOut = end.toISOString();
 
-            // Recalc Slots logic (Keep simple or refined?)
-            // Simple:
+            // Recalc Slots logic
             r.slots = Math.ceil((end - start) / (1000 * 60 * 60 * 12));
 
-            // UI Update Immediate (Optimistic)
-            renderMobileV2();
-            openV2Panel(v2SelectedId); // Refresh panel info
+            // UI Update Immediate & Sync
+            // renderMobileV2(); // refreshAllViews calls this
+            // openV2Panel(v2SelectedId); // Refresh panel info
 
-            // DB Update (Debounce or direct)
+            // DB Update
             if (db) {
                 db.collection('residents').doc(r.id).update({
                     checkIn: r.checkIn,
                     checkOut: r.checkOut,
                     room: r.room,
                     status: r.status,
-                    locked: r.locked || false
+                    locked: r.locked || false,
+                    slots: r.slots
                 });
             }
-            // saveData(); // Firebase listener handles this
+
+            saveData();
+            refreshAllViews();
+            openV2Panel(v2SelectedId); // Re-open to update panel info
+        }
+
+        function refreshAllViews() {
+            // 1. Mobile V2
+            renderMobileV2();
+
+            // 2. Mobile Matrix (Grid with circles)
+            if (document.getElementById('mobile-matrix-table-container')) {
+                renderMobileMatrix();
+            }
+
+            // 3. PC Matrix (if available) - check elements
+            if (typeof renderMatrix === 'function' && document.getElementById('matrix-table-body')) {
+                // PC版の要素が存在する場合のみ
+                renderMatrix();
+            }
         }
     </script>
 
