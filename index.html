@@ -1953,6 +1953,8 @@
                         <div class="panel-desc" id="p-desc">ROOM / DATE</div>
                     </div>
                     <div class="panel-actions">
+                        <button class="ctrl-btn" id="lock-btn" onclick="toggleV2Lock()"
+                            style="border-color:gold; color:gold;">🔓</button>
                         <button class="ctrl-btn" style="color:#ff4d4f; border-color:rgba(255,77,79,0.5);"
                             onclick="handleV2Action('delete')">🗑️</button>
                     </div>
@@ -1961,11 +1963,11 @@
                 <div class="panel-controls">
                     <!-- Date Control -->
                     <div class="ctrl-group">
-                        <div class="ctrl-label">DATE / 日付移動</div>
+                        <div class="ctrl-label">DATE / 移動 (半日単位)</div>
                         <div class="ctrl-row">
-                            <button class="ctrl-btn" onclick="handleV2Control('date', -1)">◀</button>
+                            <button class="ctrl-btn" onclick="handleV2Control('date', -0.5)">◀</button>
                             <span class="ctrl-value">MOVE</span>
-                            <button class="ctrl-btn" onclick="handleV2Control('date', 1)">▶</button>
+                            <button class="ctrl-btn" onclick="handleV2Control('date', 0.5)">▶</button>
                         </div>
                         <div class="ctrl-row">
                             <button class="ctrl-btn" onclick="handleV2Control('duration', -1)">-1</button>
@@ -2080,7 +2082,7 @@
                     <span>📊</span> ダッシュボード
                 </div>
                 <div class="nav-link" onclick="switchTab('residents')">
-                    <span>�</span> 寮の空き状況
+                    <span></span> 寮の空き状況
                 </div>
                 <div class="nav-link" onclick="switchTab('hotels')">
                     <span>🏨</span> ホテル手配一覧
@@ -2455,6 +2457,10 @@
                     if (document.getElementById('mobile-interactive-table') && !document.getElementById('mobile-edit-view').classList.contains('hidden')) {
                         renderMobileInteractiveMatrix();
                     }
+                    // Update V2 Mobile View
+                    if (document.getElementById('mobile-edit-view-v2') && !document.getElementById('mobile-edit-view-v2').classList.contains('hidden')) {
+                        if (typeof renderMobileV2 === 'function') renderMobileV2();
+                    }
                 }, 10);
             }, (error) => {
                 console.error('Residents listener error:', error);
@@ -2631,7 +2637,7 @@
             document.getElementById('mobile-form-view').classList.add('hidden');
             document.getElementById('mobile-matrix-view').classList.add('hidden');
             document.getElementById('mobile-edit-view').classList.add('hidden');
-            // Ver.2.0 Hide
+            // Ver.2.0/2.1 Hide
             const v2 = document.getElementById('mobile-edit-view-v2');
             if (v2) v2.classList.add('hidden');
 
@@ -2644,7 +2650,7 @@
                 renderMobileMatrix();
             } else if (tab === 'edit') {
                 tabs[2].classList.add('active');
-                // Use Ver.2.0
+                // Use Ver.2.0+
                 if (v2) {
                     v2.classList.remove('hidden');
                     if (typeof renderMobileV2 === 'function') renderMobileV2();
@@ -3195,6 +3201,9 @@
             if (!document.getElementById('mobile-edit-view').classList.contains('hidden')) {
                 renderMobileInteractiveMatrix();
             }
+            if (!document.getElementById('mobile-edit-view-v2').classList.contains('hidden')) {
+                renderMobileV2();
+            }
         }
 
         function viewOccupiedCell(names) {
@@ -3353,6 +3362,10 @@
             }
             if (document.getElementById('mobile-interactive-table') && !document.getElementById('mobile-edit-view').classList.contains('hidden')) {
                 renderMobileInteractiveMatrix();
+            }
+            // Update V2 Mobile View
+            if (document.getElementById('mobile-edit-view-v2') && !document.getElementById('mobile-edit-view-v2').classList.contains('hidden')) {
+                if (typeof renderMobileV2 === 'function') renderMobileV2();
             }
         }
 
@@ -4129,6 +4142,9 @@
                 if (document.getElementById('mobile-matrix-table-container')) {
                     renderMobileMatrix();
                 }
+                if (document.getElementById('mobile-edit-view-v2') && !document.getElementById('mobile-edit-view-v2').classList.contains('hidden')) {
+                    if (typeof renderMobileV2 === 'function') renderMobileV2();
+                }
             }, 100); // 短い遅延で再描画
         }
 
@@ -4748,8 +4764,6 @@
                 let slots = 0;
                 // Simple calculation tailored for grid
                 // This needs robust duration logic similar to v1 but mapped to grid rows
-                // For now, reuse r.slots logic if available, or recalc
-                // Recalculate precisely
                 let temp = new Date(start);
                 if (temp < today) temp = new Date(today); // Clip start
                 let totalSlots = 0;
@@ -4777,7 +4791,7 @@
 
                 // Create Block
                 const div = document.createElement('div');
-                div.className = `v2-block ${r.status === 'hotel' ? 'status-hotel' : ''}`;
+                div.className = `v2-block ${r.status === 'hotel' ? 'status-hotel' : ''} ${r.locked ? 'block-locked' : ''}`;
                 if (r.id === v2SelectedId) div.classList.add('selected');
                 div.innerText = r.name;
 
@@ -4818,13 +4832,25 @@
             document.getElementById('p-name').innerText = r.name;
             const start = new Date(r.checkIn);
             const end = new Date(r.checkOut);
-            const dateStr = `${start.getMonth() + 1}/${start.getDate()} - ${end.getMonth() + 1}/${end.getDate()}`;
-            document.getElementById('p-desc').innerText = `${r.room} / ${dateStr}`;
-            document.getElementById('p-status').innerText = 'READY';
+
+            const startDateStr = `${start.getMonth() + 1}/${start.getDate()} ${start.getHours() < 12 ? 'AM' : 'PM'}`;
+            const endDateStr = `${end.getMonth() + 1}/${end.getDate()} ${end.getHours() < 12 ? 'AM' : 'PM'}`;
+
+            document.getElementById('p-desc').innerText = `${r.room} / ${startDateStr} - ${endDateStr}`;
+
+            // Lock Status
+            const lockBtn = document.getElementById('lock-btn');
+            if (r.locked) {
+                document.getElementById('p-status').innerText = 'LOCKED';
+                document.getElementById('p-status').style.color = 'gold';
+                lockBtn.innerText = '🔒';
+            } else {
+                document.getElementById('p-status').innerText = 'EDITABLE';
+                document.getElementById('p-status').style.color = '#00f0ff';
+                lockBtn.innerText = '🔓';
+            }
 
             document.getElementById('v2-panel').classList.add('active');
-
-            // Scroll to view if needed? No, panel is overlay.
         }
 
         function closeV2Panel() {
@@ -4833,15 +4859,39 @@
             renderMobileV2();
         }
 
+        function toggleV2Lock() {
+            if (!v2SelectedId) return;
+            const r = localData.residents.find(x => x.id === v2SelectedId);
+            if (!r) return;
+
+            r.locked = !r.locked;
+            openV2Panel(v2SelectedId); // Refresh UI
+            // DB Update
+            if (db) {
+                db.collection('residents').doc(r.id).update({
+                    locked: r.locked
+                });
+            }
+            // saveData(); // Firebase listener handles this
+        }
+
         async function handleV2Action(action) {
             if (!v2SelectedId) return;
+            const r = localData.residents.find(x => x.id === v2SelectedId);
+            if (!r) return;
+
+            if (r.locked) {
+                alert('ロックされています。解除してから操作してください。');
+                return;
+            }
+
             if (action === 'delete') {
                 if (confirm('本当に削除しますか？')) {
                     // Delete Logic
                     if (db) await db.collection('residents').doc(v2SelectedId).delete();
                     localData.residents = localData.residents.filter(r => r.id !== v2SelectedId);
                     closeV2Panel();
-                    saveData(); // Trigger persistence
+                    // saveData(); // Firebase listener handles this
                 }
             }
         }
@@ -4852,17 +4902,46 @@
             const r = localData.residents.find(x => x.id === v2SelectedId);
             if (!r) return;
 
+            if (r.locked) {
+                alert('ロックされています。解除してから操作してください。');
+                return;
+            }
+
             // Update State
             const start = new Date(r.checkIn);
             const end = new Date(r.checkOut);
 
             if (type === 'date') {
-                start.setDate(start.getDate() + delta);
-                end.setDate(end.getDate() + delta);
+                // Helper to shift 1 slot (AM/PM)
+                const shiftSlot = (d, dir) => {
+                    if (dir > 0) { // Move forward
+                        if (d.getHours() < 12) { // Currently AM, move to PM same day
+                            d.setHours(15, 0, 0, 0);
+                        } else { // Currently PM, move to AM next day
+                            d.setDate(d.getDate() + 1);
+                            d.setHours(10, 0, 0, 0);
+                        }
+                    } else { // Move backward
+                        if (d.getHours() >= 12) { // Currently PM, move to AM same day
+                            d.setHours(10, 0, 0, 0);
+                        } else { // Currently AM, move to PM previous day
+                            d.setDate(d.getDate() - 1);
+                            d.setHours(15, 0, 0, 0);
+                        }
+                    }
+                };
+
+                // Apply shift to both start and end dates
+                const dir = delta > 0 ? 1 : -1;
+                shiftSlot(start, dir);
+                shiftSlot(end, dir);
+
             } else if (type === 'duration') {
+                // delta is days (1)
+                // Keep AM/PM status of End date? Usually duration adds 24h
                 end.setDate(end.getDate() + delta);
                 // Min check
-                if (end <= start) end.setDate(start.getDate() + 1);
+                if (end <= start) end.setDate(start.getDate() + 1); // Simple bounce
             } else if (type === 'room') {
                 const rooms = ['P209', 'P306', 'P307', 'P507', 'FG406', 'Hotel 1', 'Hotel 2', 'Hotel 3', 'Hotel 4'];
                 let idx = rooms.indexOf(r.room);
@@ -4881,8 +4960,9 @@
             r.checkIn = start.toISOString();
             r.checkOut = end.toISOString();
 
-            // Recalc Slots
-            r.slots = Math.ceil((end - start) / (1000 * 60 * 60 * 12)); // Approx
+            // Recalc Slots logic (Keep simple or refined?)
+            // Simple:
+            r.slots = Math.ceil((end - start) / (1000 * 60 * 60 * 12));
 
             // UI Update Immediate (Optimistic)
             renderMobileV2();
@@ -4894,10 +4974,11 @@
                     checkIn: r.checkIn,
                     checkOut: r.checkOut,
                     room: r.room,
-                    status: r.status
+                    status: r.status,
+                    locked: r.locked || false
                 });
             }
-            saveData();
+            // saveData(); // Firebase listener handles this
         }
     </script>
 
