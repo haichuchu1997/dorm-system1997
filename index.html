@@ -278,6 +278,187 @@
             box-shadow: 0 0 15px var(--primary-glow);
         }
 
+        /* ===== モバイル編集画面 - プレミアムアップグレード ===== */
+
+        /* モダンヘッダー */
+        .mobile-edit-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(112, 0, 255, 0.08) 100%);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+        }
+
+        .mobile-edit-header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mobile-edit-icon {
+            font-size: 1.8rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .mobile-edit-title-text {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+        }
+
+        .mobile-edit-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .mobile-help-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 240, 255, 0.15);
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            font-size: 1.2rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s var(--ease-out);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+
+        .mobile-help-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+        }
+
+        /* クイックアクションツールバー */
+        .mobile-edit-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .mobile-toolbar-btn {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s var(--ease-out);
+        }
+
+        .mobile-toolbar-btn:active {
+            background: rgba(0, 240, 255, 0.15);
+            border-color: var(--primary);
+            transform: scale(0.95);
+        }
+
+        .mobile-toolbar-icon {
+            font-size: 1.3rem;
+        }
+
+        .mobile-toolbar-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        /* 操作ガイドオーバーレイ */
+        #mobile-help-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .mobile-help-content {
+            background: var(--bg-panel);
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-lg);
+            padding: 28px 24px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.2);
+            animation: slideUp 0.4s var(--ease-out);
+        }
+
+        .mobile-help-title {
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.3rem;
+            margin: 0 0 24px 0;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .mobile-help-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .mobile-help-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .mobile-help-emoji {
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .mobile-help-item strong {
+            display: block;
+            color: var(--text-main);
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .mobile-help-item p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
         /* Mobile Matrix View */
         .mobile-matrix-container {
             display: flex;
@@ -287,10 +468,9 @@
             border-radius: var(--radius-lg);
             border: var(--border-light);
             height: calc(100vh - 220px);
-            /* Taller area */
             max-height: 800px;
             overflow: hidden;
-            /* Contain scroll */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .mobile-matrix-scroll-area {
@@ -298,37 +478,39 @@
             overflow: auto;
             -webkit-overflow-scrolling: touch;
             padding: 0;
-            /* Remove padding to let table hit edges */
         }
 
         /* Custom Scrollbar for matrix */
         .mobile-matrix-scroll-area::-webkit-scrollbar {
-            height: 6px;
-            width: 6px;
+            height: 8px;
+            width: 8px;
         }
 
         .mobile-matrix-scroll-area::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
         }
 
         .mobile-matrix-scroll-area::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 3px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .mobile-matrix-scroll-area::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #4ef7ff 0%, #9000ff 100%);
         }
 
         .mobile-matrix-scroll-area table {
             width: 100%;
             font-size: 0.9rem;
-            /* Increased from 0.75rem */
             border-collapse: separate;
-            /* Allow sticky to work better */
             border-spacing: 0;
         }
 
         .mobile-matrix-scroll-area th,
         .mobile-matrix-scroll-area td {
             padding: 12px 8px;
-            /* More padding */
             text-align: center;
             white-space: nowrap;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -338,16 +520,12 @@
             font-size: 0.85rem;
             position: sticky;
             top: 0;
-            background: var(--bg-panel);
-            /* Ensure opacity */
+            background: linear-gradient(180deg, var(--bg-panel) 0%, rgba(15, 20, 30, 0.95) 100%);
             z-index: 30;
-            /* Increased z-index */
             padding-top: 16px;
             padding-bottom: 16px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-            /* Stronger shadow */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
             outline: 1px solid rgba(255, 255, 255, 0.1);
-            /* Ensure border doesn't disappear */
         }
 
         .mobile-matrix-scroll-area td:first-child {
@@ -355,20 +533,17 @@
             left: 0;
             background: var(--bg-panel);
             z-index: 20;
-            /* Higher than normal cells, lower than header */
             font-weight: 700;
             color: var(--text-muted);
             border-right: 1px solid rgba(255, 255, 255, 0.2);
             font-size: 0.8rem;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-            /* Shadow for legibility */
         }
 
         /* Fix corner z-index */
         .mobile-matrix-scroll-area th:first-child {
             position: sticky;
             z-index: 40;
-            /* Highest z-index */
             left: 0;
             top: 0;
             outline: 1px solid rgba(255, 255, 255, 0.1);
@@ -377,7 +552,7 @@
         .mobile-matrix-footer {
             padding: 16px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
-            background: var(--bg-panel);
+            background: linear-gradient(180deg, rgba(15, 20, 30, 0.8) 0%, var(--bg-panel) 100%);
             flex-shrink: 0;
         }
 
@@ -388,14 +563,23 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            /* Let clicks pass through to empty cells if needed */
         }
 
         #mobile-resident-overlay .resident-block {
             pointer-events: auto;
-            /* Re-enable for blocks */
             position: absolute;
             z-index: 10;
+            /* プレミアムな予約ブロックスタイル - 次のセクションで定義 */
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes slideUp {
@@ -753,48 +937,124 @@
             display: block;
         }
 
-        /* Context Menu */
+        /* ===== コンテキストメニュー - モダンアップグレード ===== */
         #context-menu {
             position: fixed;
             display: none;
-            background: rgba(20, 20, 35, 0.9);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 8px 0;
+            /* グラスモーフィズム背景 */
+            background: linear-gradient(135deg, rgba(20, 20, 35, 0.92) 0%, rgba(15, 15, 30, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            border: 1.5px solid rgba(0, 240, 255, 0.3);
+            border-radius: 16px;
+            padding: 12px 0;
             z-index: 9000;
-            min-width: 180px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            min-width: 220px;
+            /* 3D影効果 */
+            box-shadow:
+                0 16px 40px rgba(0, 0, 0, 0.6),
+                0 0 30px rgba(0, 240, 255, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            /* アニメーション */
+            animation: menuSlideIn 0.25s var(--ease-out);
+            transform-origin: top left;
+        }
+
+        @keyframes menuSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         .menu-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 240, 255, 0.03);
         }
 
         .menu-item {
-            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
             cursor: pointer;
-            color: rgba(255, 255, 255, 0.8);
-            transition: all 0.2s;
-            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.85);
+            transition: all 0.2s var(--ease-out);
+            font-size: 0.95rem;
+            font-weight: 500;
+            position: relative;
+            /* タップ領域を十分に確保 */
+            min-height: 48px;
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--primary);
+            transform: scaleY(0);
+            transition: transform 0.2s var(--ease-out);
         }
 
         .menu-item:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 240, 255, 0.12);
             color: #fff;
+            padding-left: 22px;
+        }
+
+        .menu-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .menu-item:active {
+            background: rgba(0, 240, 255, 0.2);
+            transform: scale(0.98);
+        }
+
+        .menu-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
         }
 
         .menu-item.danger {
             color: var(--danger);
         }
 
+        .menu-item.danger::before {
+            background: var(--danger);
+        }
+
         .menu-item.danger:hover {
-            background: rgba(255, 42, 109, 0.2);
+            background: rgba(255, 42, 109, 0.15);
+            border-left-color: var(--danger);
+        }
+
+        .menu-item.danger:active {
+            background: rgba(255, 42, 109, 0.25);
+        }
+
+        .menu-divider {
+            height: 1px;
+            margin: 8px 0;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(255, 255, 255, 0.15) 50%,
+                    transparent 100%);
         }
 
         .extend-controls {
@@ -803,24 +1063,32 @@
         }
 
         .circle-btn {
-            width: 24px;
-            height: 24px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s;
-            background: none;
+            transition: all 0.2s var(--ease-out);
             color: #fff;
-            font-size: 1.1rem;
+            font-size: 1.3rem;
+            font-weight: 700;
             line-height: 1;
         }
 
         .circle-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: #fff;
+            background: rgba(0, 240, 255, 0.2);
+            border-color: var(--primary);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+
+        .circle-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
         }
 
         /* Fixed Grid Dimensions for Overlay Calculation */
@@ -924,52 +1192,177 @@
             z-index: 50;
         }
 
-        /* Draggable Blocks */
+        /* ===== プレミアム予約ブロック - アップグレード ===== */
         .resident-block {
             position: absolute;
             pointer-events: auto;
-            background: rgba(0, 240, 255, 0.25);
-            border: 1px solid rgba(0, 240, 255, 0.6);
-            border-radius: 6px;
+            /* グラデーション背景 */
+            background: linear-gradient(135deg,
+                    rgba(0, 240, 255, 0.25) 0%,
+                    rgba(0, 200, 255, 0.35) 100%);
+            border: 1.5px solid rgba(0, 240, 255, 0.7);
+            border-radius: 8px;
             color: #fff;
             font-size: 0.8rem;
+            font-weight: 600;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 0 4px;
+            padding: 6px 8px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(4px);
+            /* 3D効果 */
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(0, 240, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(6px);
             cursor: grab;
-            transition: transform 0.1s, box-shadow 0.1s;
+            transition: all 0.3s var(--ease-out);
+            will-change: transform, box-shadow;
+            /* テキストシャドウで視認性向上 */
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        /* ホバー&タップエフェクト */
+        .resident-block:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow:
+                0 6px 16px rgba(0, 0, 0, 0.4),
+                0 0 30px rgba(0, 240, 255, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: rgba(0, 240, 255, 0.9);
         }
 
         .resident-block:active {
             cursor: grabbing;
             z-index: 1000 !important;
-            transform: scale(1.02);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            transform: scale(1.05) rotate(1deg);
+            box-shadow:
+                0 12px 32px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(0, 240, 255, 0.6);
+            opacity: 0.9;
         }
 
+        /* ブロック内のコンテンツ */
+        .resident-block .block-name {
+            font-weight: 800;
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
+        }
+
+        .resident-block .block-dates {
+            font-size: 0.65rem;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* ホテルタイプ */
         .resident-block.type-hotel {
-            background: rgba(255, 42, 109, 0.25);
-            border: 1px solid rgba(255, 42, 109, 0.6);
+            background: linear-gradient(135deg,
+                    rgba(255, 42, 109, 0.25) 0%,
+                    rgba(255, 0, 90, 0.35) 100%);
+            border: 1.5px solid rgba(255, 42, 109, 0.7);
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(255, 42, 109, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
+        .resident-block.type-hotel:hover {
+            box-shadow:
+                0 6px 16px rgba(0, 0, 0, 0.4),
+                0 0 30px rgba(255, 42, 109, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 42, 109, 0.9);
+        }
+
+        /* 清掃タイプ */
         .resident-block.type-cleaning {
-            background: rgba(255, 42, 109, 0.15);
-            border: 2px solid var(--danger);
+            background: linear-gradient(135deg,
+                    rgba(255, 42, 109, 0.12) 0%,
+                    rgba(255, 0, 90, 0.18) 100%);
+            border: 2px dashed var(--danger);
             color: var(--danger);
             font-weight: 700;
+            box-shadow:
+                0 4px 12px rgba(255, 42, 109, 0.2),
+                inset 0 0 10px rgba(255, 42, 109, 0.1);
         }
 
+        /* 清掃完了タイプ */
         .resident-block.type-cleaning-done {
-            background: rgba(5, 248, 116, 0.15);
+            background: linear-gradient(135deg,
+                    rgba(5, 248, 116, 0.12) 0%,
+                    rgba(0, 220, 100, 0.18) 100%);
             border: 2px solid var(--success);
             color: var(--success);
             font-weight: 700;
+            box-shadow:
+                0 4px 12px rgba(5, 248, 116, 0.2),
+                0 0 15px rgba(5, 248, 116, 0.3),
+                inset 0 0 10px rgba(5, 248, 116, 0.1);
+        }
+
+        .resident-block.type-cleaning-done:hover {
+            box-shadow:
+                0 6px 16px rgba(5, 248, 116, 0.3),
+                0 0 25px rgba(5, 248, 116, 0.4);
+        }
+
+        /* イエローカラー（移動可能） */
+        .resident-block.color-yellow {
+            background: linear-gradient(135deg,
+                    rgba(255, 214, 0, 0.25) 0%,
+                    rgba(255, 195, 0, 0.35) 100%) !important;
+            border: 2px solid rgba(255, 214, 0, 0.9) !important;
+            box-shadow:
+                0 4px 12px rgba(255, 214, 0, 0.3),
+                0 0 20px rgba(255, 214, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+            color: #FFD600 !important;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+            font-weight: 800;
+        }
+
+        .resident-block.color-yellow:hover {
+            box-shadow:
+                0 6px 16px rgba(255, 214, 0, 0.4),
+                0 0 30px rgba(255, 214, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+        }
+
+        /* リップルエフェクト用 */
+        @keyframes ripple {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        .resident-block::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .resident-block:active::after {
+            animation: ripple 0.6s ease-out;
         }
 
         /* Modal */
@@ -1101,12 +1494,38 @@
             </div>
         </div>
 
-        <!-- Edit Matrix View (Interactive) -->
+        <!-- Edit Matrix View (Interactive) - UPGRADED -->
         <div id="mobile-edit-view" class="mobile-matrix-container hidden">
-            <div
-                style="padding: 12px 16px; color: var(--text-muted); font-size: 0.85rem; text-align: center; background: var(--bg-panel); border-radius: var(--radius-lg) var(--radius-lg) 0 0;">
-                長押しでメニュー・ドラッグで移動
+            <!-- モダンヘッダー -->
+            <div class="mobile-edit-header">
+                <div class="mobile-edit-header-title">
+                    <div class="mobile-edit-icon">✏️</div>
+                    <div>
+                        <div class="mobile-edit-title-text">編集モード</div>
+                        <div class="mobile-edit-subtitle">長押しでメニュー・ドラッグで移動</div>
+                    </div>
+                </div>
+                <button class="mobile-help-btn" onclick="toggleMobileHelp()" title="操作ガイド">
+                    <span>?</span>
+                </button>
             </div>
+
+            <!-- クイックアクションツールバー -->
+            <div class="mobile-edit-toolbar">
+                <button class="mobile-toolbar-btn" onclick="refreshMobileEdit()" title="更新">
+                    <span class="mobile-toolbar-icon">🔄</span>
+                    <span class="mobile-toolbar-label">更新</span>
+                </button>
+                <button class="mobile-toolbar-btn" onclick="toggleMobileGridLines()" title="グリッド線">
+                    <span class="mobile-toolbar-icon">📏</span>
+                    <span class="mobile-toolbar-label">グリッド</span>
+                </button>
+                <button class="mobile-toolbar-btn" onclick="fitMobileView()" title="表示最適化">
+                    <span class="mobile-toolbar-icon">🔍</span>
+                    <span class="mobile-toolbar-label">最適表示</span>
+                </button>
+            </div>
+
             <div class="mobile-matrix-scroll-area" id="mobile-edit-matrix-container" style="position: relative;">
                 <div id="mobile-matrix-content-wrapper" style="position: relative; width: max-content;">
                     <table class="matrix-table" id="mobile-interactive-table">
@@ -1122,6 +1541,39 @@
                 <button class="btn btn-primary w-full" onclick="loadMore30Days()"
                     style="padding: 10px 20px; font-size: 0.9rem;">
                     先30日分を追加表示
+                </button>
+            </div>
+        </div>
+
+        <!-- 操作ガイドオーバーレイ -->
+        <div id="mobile-help-overlay" class="hidden">
+            <div class="mobile-help-content">
+                <h3 class="mobile-help-title">📱 操作ガイド</h3>
+                <div class="mobile-help-section">
+                    <div class="mobile-help-item">
+                        <span class="mobile-help-emoji">👆</span>
+                        <div>
+                            <strong>タップ</strong>
+                            <p>予約の詳細を表示</p>
+                        </div>
+                    </div>
+                    <div class="mobile-help-item">
+                        <span class="mobile-help-emoji">✋</span>
+                        <div>
+                            <strong>長押し</strong>
+                            <p>編集メニューを表示</p>
+                        </div>
+                    </div>
+                    <div class="mobile-help-item">
+                        <span class="mobile-help-emoji">👉</span>
+                        <div>
+                            <strong>ドラッグ</strong>
+                            <p>予約を移動</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary w-full" onclick="toggleMobileHelp()" style="margin-top: 20px;">
+                    閉じる
                 </button>
             </div>
         </div>
@@ -1340,26 +1792,53 @@
         </div>
     </div>
 
-    <!-- Context Menu -->
+    <!-- Context Menu - UPGRADED MOBILE-FRIENDLY -->
     <div id="context-menu">
         <div id="menu-group-resident">
+            <!-- 延長コントロール -->
             <div class="menu-row">
-                <span>延長</span>
+                <span style="font-weight: 600; color: var(--text-main);">🗓️ 期間延長</span>
                 <div class="extend-controls">
                     <button class="circle-btn" id="menu-reduce" title="1日短縮">−</button>
                     <button class="circle-btn" id="menu-extend" title="1日延長">+</button>
                 </div>
             </div>
-            <div class="menu-item" id="menu-lock">ロック</div>
-            <div class="menu-item" id="menu-rename">名前変更</div>
-            <div class="menu-item" id="menu-duplicate">複製</div>
-            <div class="menu-item" id="menu-hotel">ホテル待ちに移動</div>
+            <!-- 編集メニューアイテム -->
+            <div class="menu-item" id="menu-lock">
+                <span class="menu-icon">🔒</span>
+                <span>ロック</span>
+            </div>
+            <div class="menu-item" id="menu-rename">
+                <span class="menu-icon">📝</span>
+                <span>名前変更</span>
+            </div>
+            <div class="menu-item" id="menu-duplicate">
+                <span class="menu-icon">📋</span>
+                <span>複製</span>
+            </div>
+            <div class="menu-item" id="menu-hotel">
+                <span class="menu-icon">🏨</span>
+                <span>ホテル待ちに移動</span>
+            </div>
         </div>
+        <!-- 空セルメニューグループ -->
         <div id="menu-group-empty" class="hidden">
-            <div class="menu-item" id="menu-add-cleaning">清掃を追加</div>
+            <div class="menu-item" id="menu-add-cleaning">
+                <span class="menu-icon">🧼</span>
+                <span>清掃を追加</span>
+            </div>
         </div>
-        <div class="menu-item" id="menu-complete-cleaning">清掃完了に変更</div>
-        <div class="menu-item danger" id="menu-delete">削除</div>
+        <!-- 清掃完了メニュー -->
+        <div class="menu-item" id="menu-complete-cleaning">
+            <span class="menu-icon">✅</span>
+            <span>清掃完了に変更</span>
+        </div>
+        <!-- 削除（ダンジャーゾーン） -->
+        <div class="menu-divider"></div>
+        <div class="menu-item danger" id="menu-delete">
+            <span class="menu-icon">🗑️</span>
+            <span style="font-weight: 700;">削除</span>
+        </div>
     </div>
 
     <!-- Custom Confirm Modal -->
@@ -3413,6 +3892,66 @@
                 console.log("===== AutoInit Completed =====");
             } catch (e) {
                 console.error("AutoInit Failed:", e);
+            }
+        }
+
+        // === モバイル編集画面用新機能 ===
+
+        // ヘルプオーバーレイのトグル
+        function toggleMobileHelp() {
+            const overlay = document.getElementById('mobile-help-overlay');
+            if (overlay) {
+                overlay.classList.toggle('hidden');
+            }
+        }
+
+        // モバイル編集ビューの更新
+        function refreshMobileEdit() {
+            renderMobileInteractiveMatrix();
+            // 触覚フィードバック（対応デバイスのみ）
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+
+        // グリッド線の表示切り替え
+        let gridLinesVisible = false;
+        function toggleMobileGridLines() {
+            gridLinesVisible = !gridLinesVisible;
+            const table = document.getElementById('mobile-interactive-table');
+            if (!table) return;
+
+            if (gridLinesVisible) {
+                table.style.borderCollapse = 'collapse';
+                const cells = table.querySelectorAll('td, th');
+                cells.forEach(cell => {
+                    cell.style.border = '1px dashed rgba(0, 240, 255, 0.2)';
+                });
+            } else {
+                table.style.borderCollapse = 'separate';
+                const cells = table.querySelectorAll('td, th');
+                cells.forEach(cell => {
+                    cell.style.border = '';
+                });
+            }
+
+            // 触覚フィードバック
+            if (navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+        }
+
+        // ビューの最適化（スクロールを今日にリセット）
+        function fitMobileView() {
+            const container = document.getElementById('mobile-edit-matrix-container');
+            if (container) {
+                // トップにスクロール
+                container.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+            }
+
+            // 触覚フィードバック
+            if (navigator.vibrate) {
+                navigator.vibrate([30, 50, 30]);
             }
         }
 
