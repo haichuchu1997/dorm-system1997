@@ -340,27 +340,38 @@
             top: 0;
             background: var(--bg-panel);
             /* Ensure opacity */
-            z-index: 20;
+            z-index: 30;
+            /* Increased z-index */
             padding-top: 16px;
             padding-bottom: 16px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            /* Stronger shadow */
+            outline: 1px solid rgba(255, 255, 255, 0.1);
+            /* Ensure border doesn't disappear */
         }
 
         .mobile-matrix-scroll-area td:first-child {
             position: sticky;
             left: 0;
             background: var(--bg-panel);
-            z-index: 10;
+            z-index: 20;
+            /* Higher than normal cells, lower than header */
             font-weight: 700;
             color: var(--text-muted);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
             font-size: 0.8rem;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            /* Shadow for legibility */
         }
 
         /* Fix corner z-index */
         .mobile-matrix-scroll-area th:first-child {
-            z-index: 30;
+            position: sticky;
+            z-index: 40;
+            /* Highest z-index */
             left: 0;
+            top: 0;
+            outline: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .mobile-matrix-footer {
