@@ -1070,7 +1070,7 @@
                     <span>📊</span> ダッシュボード
                 </div>
                 <div class="nav-link" onclick="switchTab('residents')">
-                    <span>�</span> 寮の空き状況
+                    <span> </span> 寮の空き状況
                 </div>
                 <div class="nav-link" onclick="switchTab('hotels')">
                     <span>🏨</span> ホテル手配一覧
@@ -1302,6 +1302,9 @@
          LOGIC SCRIPT
          ============================================== -->
     <script>
+        console.log("===== SCRIPT STARTED =====");
+        console.log("Firebase SDK loaded:", typeof firebase !== 'undefined');
+
         // Firebase設定（フルリアルタイム同期対応）
         const firebaseConfig = {
             apiKey: "AIzaSyAktEtPenYgXw1Xl5oAf7faiLLL0vCX4B0",
@@ -1334,21 +1337,33 @@
 
 
         function initFirebase() {
+            console.log("===== initFirebase called =====");
+            console.log("db before init:", db);
+            console.log("firebaseConfig.apiKey:", firebaseConfig.apiKey);
+
             try {
                 if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                    console.log("Initializing Firebase...");
                     firebase.initializeApp(firebaseConfig);
                     db = firebase.firestore();
-                    console.log("Firebase Connected");
+                    console.log("===== Firebase Connected =====");
+                    console.log("db after init:", db);
 
                     // リアルタイム同期リスナーを設定
                     setupRealtimeListeners();
                 } else {
-                    console.warn("Firebase Config missing - Running in Demo Mode");
+                    console.warn("===== Firebase Config missing - Running in Demo Mode =====");
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error("===== Firebase Init Error =====", e);
+            }
         }
 
+
         // リアルタイム同期リスナー
+        let renderDebounceTimer = null; // Debounce用のタイマー
+        let isEditing = false; // 編集中フラグ（コンテキストメニュー表示中など）
+
         function setupRealtimeListeners() {
             if (!db) return;
 
@@ -1357,8 +1372,12 @@
                 if (doc.exists) {
                     localData.settings = doc.data();
                     console.log('Settings updated in real-time');
-                    // UIを更新
-                    updateDashboard();
+
+                    // Debounce: 500ms待機してから更新
+                    if (renderDebounceTimer) clearTimeout(renderDebounceTimer);
+                    renderDebounceTimer = setTimeout(() => {
+                        updateDashboard();
+                    }, 500);
                 }
             }, (error) => {
                 console.error('Settings listener error:', error);
@@ -1369,22 +1388,34 @@
                 localData.residents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 console.log('Residents data updated in real-time:', localData.residents.length, 'records');
 
-                // すべてのビューを自動更新
-                updateDashboard();
-
-                // PC版マトリックスを更新
-                if (document.getElementById('sect-matrix')) {
-                    renderMatrix();
+                // 編集中（コンテキストメニュー表示中）は再描画をスキップ
+                if (isEditing) {
+                    console.log('Skipping render - editing in progress');
+                    return;
                 }
 
-                // スマホ版マトリックスを更新
-                if (document.getElementById('mobile-matrix-table-container')) {
-                    renderMobileMatrix();
-                }
+                // Debounce: 連続した更新を1回にまとめる（500ms待機）
+                if (renderDebounceTimer) clearTimeout(renderDebounceTimer);
+
+                renderDebounceTimer = setTimeout(() => {
+                    // すべてのビューを自動更新
+                    updateDashboard();
+
+                    // PC版マトリックスを更新
+                    if (document.getElementById('sect-matrix')) {
+                        renderMatrix();
+                    }
+
+                    // スマホ版マトリックスを更新
+                    if (document.getElementById('mobile-matrix-table-container')) {
+                        renderMobileMatrix();
+                    }
+                }, 500); // 500ミリ秒待機
             }, (error) => {
                 console.error('Residents listener error:', error);
             });
         }
+
 
         // --- Custom Dialog Helpers (Centered Modals) ---
         function showConfirm(message) {
@@ -2335,6 +2366,11 @@
 
             const block = e.target.closest('.resident-block');
             const menu = document.getElementById('context-menu');
+            if (!menu) return;
+
+            isEditing = true; // 編集中フラグをセット
+            menu.style.display = 'block'; // Show first to get dimensions
+
             const resGroup = document.getElementById('menu-group-resident');
             const emptyGroup = document.getElementById('menu-group-empty');
 
@@ -2387,7 +2423,7 @@
             }
 
             // Position menu
-            menu.style.display = 'block'; // Show first to get dimensions
+            // menu.style.display = 'block'; // Show first to get dimensions // Moved up
 
             let x = e.clientX;
             let y = e.clientY;
@@ -2409,101 +2445,192 @@
             menu.style.left = x + 'px';
         }
 
-        function hideContextMenu(e) {
-            // Don't close if clicking inside the context menu (for Extend buttons)
-            if (e && e.target.closest('#context-menu')) return;
-            document.getElementById('context-menu').style.display = 'none';
+        function hideContextMenu() {
+            const menu = document.getElementById('context-menu');
+            if (menu) {
+                menu.style.display = 'none';
+            }
+            isEditing = false; // 編集終了時にフラグを解除
+
+            // メニューを閉じた後、最新データで再描画
+            if (renderDebounceTimer) clearTimeout(renderDebounceTimer);
+            renderDebounceTimer = setTimeout(() => {
+                if (document.getElementById('sect-matrix')) {
+                    renderMatrix();
+                }
+                if (document.getElementById('mobile-matrix-table-container')) {
+                    renderMobileMatrix();
+                }
+            }, 100); // 短い遅延で再描画
         }
 
         async function handleExtend(delta, e) {
             if (e) e.stopPropagation();
             const r = localData.residents.find(res => res.id == menuResidentId);
-            if (!r) return;
+            if (!r) {
+                hideContextMenu();
+                return;
+            }
 
             if (!r.slots) r.slots = r.nights * 2;
             const newSlots = Math.max(1, r.slots + delta);
             if (newSlots === r.slots) return;
 
             r.slots = newSlots;
-            // Update nights for back-compat or logic
             r.nights = Math.ceil(r.slots / 2);
             updateFinancials(r);
 
+            // 先にメニューを閉じてフラグを解除
+            hideContextMenu();
+
             if (db) {
-                await db.collection('residents').doc(r.id).update({ slots: r.slots, nights: r.nights, totalCost: r.totalCost });
+                try {
+                    console.log('Extending resident:', r.id, 'slots:', r.slots);
+                    await db.collection('residents').doc(r.id).update({ slots: r.slots, nights: r.nights, totalCost: r.totalCost });
+                    console.log('Successfully extended resident');
+                } catch (error) {
+                    console.error('Error extending resident:', error);
+                    showAlert('延長に失敗しました: ' + error.message);
+                }
+            } else {
+                // ローカルモードの場合のみ手動更新
+                localData.residents = [...localData.residents];
+                renderMatrix();
+                renderMobileMatrix();
             }
-            refreshData();
         }
 
         async function handleLock() {
             const r = localData.residents.find(res => res.id == menuResidentId);
-            if (!r) return;
-            r.locked = !r.locked;
-            if (db) {
-                await db.collection('residents').doc(r.id).update({ locked: r.locked });
+            if (!r) {
+                hideContextMenu();
+                return;
             }
+            r.locked = !r.locked;
+
+            // 先にメニューを閉じてフラグを解除
             hideContextMenu();
-            refreshData();
+
+            if (db) {
+                try {
+                    console.log('Toggling lock for resident:', r.id, 'locked:', r.locked);
+                    await db.collection('residents').doc(r.id).update({ locked: r.locked });
+                    console.log('Successfully toggled lock');
+                } catch (error) {
+                    console.error('Error toggling lock:', error);
+                    showAlert('ロック切り替えに失敗しました: ' + error.message);
+                }
+            } else {
+                renderMatrix();
+                renderMobileMatrix();
+            }
         }
 
         async function handleDuplicate() {
             const r = localData.residents.find(res => res.id == menuResidentId);
-            if (!r) return;
+            if (!r) {
+                hideContextMenu();
+                return;
+            }
 
             const rooms = ["P209", "P306", "P307", "P507", "FG406", "Hotel 1", "Hotel 2", "Hotel 3", "Hotel 4"];
             const currentIdx = rooms.indexOf(r.room);
             const nextIdx = (currentIdx + 1) % rooms.length;
 
             const newR = JSON.parse(JSON.stringify(r));
-            newR.id = 'copy_' + Date.now();
+            delete newR.id; // Firestoreが自動でIDを生成する
             newR.room = rooms[nextIdx];
             newR.status = nextIdx >= 5 ? 'hotel' : 'dorm';
-            newR.locked = false; // Don't copy lock
+            newR.locked = false;
 
-            if (db) await db.collection('residents').add(newR);
-            else {
-                localData.residents.push(newR);
-                refreshData();
-            }
+            // 先にメニューを閉じてフラグを解除
             hideContextMenu();
+
+            if (db) {
+                try {
+                    console.log('Duplicating resident to room:', newR.room);
+                    await db.collection('residents').add(newR);
+                    console.log('Successfully duplicated resident');
+                } catch (error) {
+                    console.error('Error duplicating resident:', error);
+                    showAlert('複製に失敗しました: ' + error.message);
+                }
+            } else {
+                newR.id = 'copy_' + Date.now();
+                localData.residents.push(newR);
+                renderMatrix();
+                renderMobileMatrix();
+            }
         }
 
         async function handleMoveToHotel() {
             const r = localData.residents.find(res => res.id == menuResidentId);
-            if (!r) return;
+            if (!r) {
+                hideContextMenu();
+                return;
+            }
 
-            // Find first available hotel slot
             const hotelRooms = ["Hotel 1", "Hotel 2", "Hotel 3", "Hotel 4"];
-            // Simplified: just move to "Hotel 1" for now or rotate
-            // Better: find if r is already in hotel, if so move to next
             const currentIdx = hotelRooms.indexOf(r.room);
             const nextIdx = (currentIdx + 1) % hotelRooms.length;
             r.room = hotelRooms[nextIdx];
             r.status = 'hotel';
 
-            if (db) {
-                await db.collection('residents').doc(r.id).update({ room: r.room, status: 'hotel' });
-            }
+            // 先にメニューを閉じてフラグを解除
             hideContextMenu();
-            refreshData();
+
+            if (db) {
+                try {
+                    console.log('Moving resident to hotel:', r.id, 'room:', r.room);
+                    await db.collection('residents').doc(r.id).update({ room: r.room, status: 'hotel' });
+                    console.log('Successfully moved to hotel');
+                } catch (error) {
+                    console.error('Error moving to hotel:', error);
+                    showAlert('ホテル移動に失敗しました: ' + error.message);
+                }
+            } else {
+                renderMatrix();
+                renderMobileMatrix();
+            }
         }
 
         async function handleDelete() {
             const confirmed = await showConfirm('この予約を削除しますか？');
-            if (!confirmed) return;
-            const idx = localData.residents.findIndex(res => res.id == menuResidentId);
-            if (idx === -1) return;
-
-            if (db) await db.collection('residents').doc(menuResidentId).delete();
-            else {
-                localData.residents.splice(idx, 1);
-                refreshData();
+            if (!confirmed) {
+                hideContextMenu();
+                return;
             }
+            const idx = localData.residents.findIndex(res => res.id == menuResidentId);
+            if (idx === -1) {
+                hideContextMenu();
+                return;
+            }
+
+            // 先にメニューを閉じてフラグを解除
             hideContextMenu();
+
+            if (db) {
+                try {
+                    console.log('Deleting resident:', menuResidentId);
+                    await db.collection('residents').doc(menuResidentId).delete();
+                    console.log('Successfully deleted resident');
+                } catch (error) {
+                    console.error('Error deleting resident:', error);
+                    showAlert('削除に失敗しました: ' + error.message);
+                }
+            } else {
+                localData.residents.splice(idx, 1);
+                renderMatrix();
+                renderMobileMatrix();
+            }
         }
 
         // Global listeners for Context Menu
-        document.addEventListener('click', (e) => hideContextMenu(e));
+        document.addEventListener('click', (e) => {
+            // メニュー内をクリックした場合は閉じない（メニュー機能が実行されるまで待つ）
+            if (e.target.closest('#context-menu')) return;
+            hideContextMenu();
+        });
         window.addEventListener('scroll', () => hideContextMenu(), true);
 
         async function handleAddCleaning() {
