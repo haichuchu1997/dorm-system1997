@@ -1873,16 +1873,31 @@
                         <table class="matrix-table" style="min-width: 1580px;">
                             <thead>
                                 <tr style="text-align:center;">
-                                    <th style="width:140px;">日付</th>
-                                    <th>P209</th>
-                                    <th>P306</th>
-                                    <th>P307</th>
-                                    <th>P507</th>
-                                    <th>FG406</th>
-                                    <th style="color:var(--danger);">Hotel 1</th>
-                                    <th style="color:var(--danger);">Hotel 2</th>
-                                    <th style="color:var(--danger);">Hotel 3</th>
-                                    <th style="color:var(--danger);">Hotel 4</th>
+                                    <th
+                                        style="width:140px; position: sticky; top: 0; left: 0; z-index: 2100; background: var(--bg-panel);">
+                                        日付</th>
+                                    <th style="position: sticky; top: 0; z-index: 2000; background: var(--bg-panel);">
+                                        P209</th>
+                                    <th style="position: sticky; top: 0; z-index: 2000; background: var(--bg-panel);">
+                                        P306</th>
+                                    <th style="position: sticky; top: 0; z-index: 2000; background: var(--bg-panel);">
+                                        P307</th>
+                                    <th style="position: sticky; top: 0; z-index: 2000; background: var(--bg-panel);">
+                                        P507</th>
+                                    <th style="position: sticky; top: 0; z-index: 2000; background: var(--bg-panel);">
+                                        FG406</th>
+                                    <th
+                                        style="color:var(--danger); position: sticky; top: 0; z-index: 2000; background: var(--bg-panel);">
+                                        Hotel 1</th>
+                                    <th
+                                        style="color:var(--danger); position: sticky; top: 0; z-index: 2000; background: var(--bg-panel);">
+                                        Hotel 2</th>
+                                    <th
+                                        style="color:var(--danger); position: sticky; top: 0; z-index: 2000; background: var(--bg-panel);">
+                                        Hotel 3</th>
+                                    <th
+                                        style="color:var(--danger); position: sticky; top: 0; z-index: 2000; background: var(--bg-panel);">
+                                        Hotel 4</th>
                                 </tr>
                             </thead>
                             <tbody id="matrix-table-body">
@@ -2329,7 +2344,7 @@
             // 1. Render Header
             let headerHtml = `<tr style="height: ${HEADER_HEIGHT}px;"><th style="height: ${HEADER_HEIGHT}px; min-width: ${DATE_COL_WIDTH}px; position: sticky; left: 0; z-index: 2100; background: var(--bg-panel); padding:0; vertical-align:middle;">日付</th>`;
             roomNames.forEach(room => {
-                headerHtml += `<th style="height: ${HEADER_HEIGHT}px; min-width: ${COL_WIDTH}px; padding:0; vertical-align:middle;">${room}</th>`;
+                headerHtml += `<th style="height: ${HEADER_HEIGHT}px; min-width: ${COL_WIDTH}px; padding:0; vertical-align:middle; position: sticky; top: 0; z-index: 2000; background: var(--bg-panel);">${room}</th>`;
             });
             headerHtml += '</tr>';
             thead.innerHTML = headerHtml;
