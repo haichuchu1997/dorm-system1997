@@ -2266,6 +2266,24 @@
                 </div>
             </div>
 
+            <!-- Admin Auth Modal -->
+            <div class="modal-overlay" id="admin-auth-modal" style="z-index: 9999;">
+                <div class="modal-card" style="max-width: 300px; text-align: center;">
+                    <h3>管理者認証</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+                        編集機能を利用するには<br>パスワードを入力してください
+                    </p>
+                    <div class="form-group">
+                        <input type="password" id="admin-pw-input" placeholder="Password"
+                            style="width:100%; padding:10px; border-radius:6px; border:1px solid #444; background:#222; color:#fff; text-align:center; font-size:1.2rem; letter-spacing: 2px;">
+                    </div>
+                    <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+                        <button class="btn" style="background:#444;" onclick="closeAdminAuth()">キャンセル</button>
+                        <button class="btn btn-primary" onclick="submitAdminAuth()">認証</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Matrix Table Section (For Dorm Availability) -->
             <div id="sect-matrix" class="table-panel hidden">
                 <div class="table-header">
@@ -2760,28 +2778,49 @@
         }
 
         // Auth State
+        // Auth State
         let isMobileAdminAuthenticated = false;
+        let pendingTabTarget = null; // Store tab to switch to after auth
 
         function switchMobileTab(tab) {
             const tabs = document.querySelectorAll('.mobile-nav-tab');
 
             // Handle Auth for Edit Tab
             if (tab === 'edit' && !isMobileAdminAuthenticated) {
-                const password = prompt('管理者パスワードを入力してください:');
-                if (password === '0220') {
-                    isMobileAdminAuthenticated = true;
-                    // Success: Proceed below
-                } else {
-                    alert('パスワードが違います。アクセスできません。');
-                    // Revert to Matrix View or just stop
-                    // If we were on another tab, stay there.
-                    // If this is initial load, validation needed.
-                    // For now, simple return to stop switching.
-                    // Also visual feedback: deselect edit tab if clicked
-                    return;
-                }
+                // Show Custom Modal instead of prompt
+                pendingTabTarget = tab;
+                document.getElementById('admin-pw-input').value = '';
+                document.getElementById('admin-auth-modal').classList.add('open');
+                // Focus input slightly delayed for mobile keyboard
+                setTimeout(() => document.getElementById('admin-pw-input').focus(), 100);
+                return;
             }
 
+            completeTabSwitch(tab);
+        }
+
+        function closeAdminAuth() {
+            document.getElementById('admin-auth-modal').classList.remove('open');
+            pendingTabTarget = null;
+        }
+
+        function submitAdminAuth() {
+            const pw = document.getElementById('admin-pw-input').value;
+            if (pw === '0220') {
+                isMobileAdminAuthenticated = true;
+                closeAdminAuth();
+                if (pendingTabTarget) {
+                    completeTabSwitch(pendingTabTarget);
+                }
+            } else {
+                alert('パスワードが違います');
+                document.getElementById('admin-pw-input').value = '';
+                document.getElementById('admin-pw-input').focus();
+            }
+        }
+
+        function completeTabSwitch(tab) {
+            const tabs = document.querySelectorAll('.mobile-nav-tab');
             tabs.forEach(t => t.classList.remove('active'));
 
             document.getElementById('mobile-form-view').classList.add('hidden');
