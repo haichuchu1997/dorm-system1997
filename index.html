@@ -265,6 +265,8 @@
             box-shadow: var(--shadow-card);
             animation: slideUp 0.6s var(--ease-out);
             margin-bottom: 24px;
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
         }
 
         .brand-header {
@@ -1871,7 +1873,7 @@
                 <div class="input-group">
                     <label>部屋 / Room</label>
                     <select id="m-room" required>
-                        <option value="">部屋を選択してください</option>
+                        <option value="" disabled selected>部屋を選択してください</option>
                         <option value="P209">P209</option>
                         <option value="P306">P306</option>
                         <option value="P307">P307</option>
@@ -1883,6 +1885,7 @@
                 <div class="input-group">
                     <label>枠の色 / Block Color</label>
                     <select id="m-color" required>
+                        <option value="" disabled selected>色を選択してください</option>
                         <option value="default">固定 (シアン)</option>
                         <option value="yellow">移動可 (イエロー)</option>
                         <option value="purple">空室待ち (パープル)</option>
