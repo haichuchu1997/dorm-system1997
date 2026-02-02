@@ -4328,8 +4328,47 @@
             if (newSlots === r.slots) return;
 
             r.slots = newSlots;
-            r.nights = Math.ceil(r.slots / 2);
-            updateFinancials(r);
+
+            // Calculate new checkOut date based on slots
+            const startDate = new Date(r.checkIn);
+            if (r.checkInTime === 'PM') startDate.setHours(15, 0, 0, 0);
+            else startDate.setHours(10, 0, 0, 0);
+
+            // Add slots (1 slot = 12 hours approx, actually logic is: 2 slots = 1 day)
+            // Logic: 
+            // 1 slot: AM->PM (same day), PM->AM (next day)
+            // Add (slots * 0.5) days to start
+            // Precise logic:
+            const totalHours = r.slots * 12; // Approximation, better to step through slots
+
+            // Re-calculate End Date from Start + Slots
+            // We can reuse logic similar to shiftSlot but simpler:
+            const endDate = new Date(startDate);
+            // If we just add 12h * slots?
+            // AM(10) + 12h = PM(22) -> treat as PM(15) visually
+            // PM(15) + 12h = AM(3+24) -> treat as AM(10) next day
+
+            // Iterative approach to be safe with AM/PM logic
+            // Base is startDate.
+            let current = new Date(startDate);
+            for (let i = 0; i < r.slots; i++) {
+                if (current.getHours() < 12) { // AM -> PM
+                    current.setHours(15, 0, 0, 0);
+                } else { // PM -> AM next day
+                    current.setDate(current.getDate() + 1);
+                    current.setHours(10, 0, 0, 0);
+                }
+            }
+
+            // Update r.checkOut and r.checkOutTime
+            const eY = current.getFullYear();
+            const eM = String(current.getMonth() + 1).padStart(2, '0');
+            const eD = String(current.getDate()).padStart(2, '0');
+            r.checkOut = `${eY}-${eM}-${eD}`;
+            r.checkOutTime = current.getHours() < 12 ? 'AM' : 'PM';
+
+            updateFinancials(r); // Now this will work correctly with new dates
+            refreshData(); // Sync Dashboard
 
             // メニューを閉じない（連続操作のため）
             // hideContextMenu();
@@ -5195,9 +5234,15 @@
             const endD = String(end.getDate()).padStart(2, '0');
             r.checkOut = `${endY}-${endM}-${endD}`;
 
-            // Update checkInTime and checkOutTime based on new times
             r.checkInTime = start.getHours() < 12 ? 'AM' : 'PM';
             r.checkOutTime = end.getHours() < 12 ? 'AM' : 'PM';
+
+            // Calculate slots and update financials
+            r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
+            updateFinancials(r);
+
+            // Update Dashboard and other views
+            refreshData();
 
             // Recalculate slots: スロット数を計算（半日単位）
             // AM to AM = 2 slots (1日), AM to PM = 1 slot (半日), PM to AM next day = 1 slot, PM to PM = 2 slots
