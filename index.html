@@ -2032,6 +2032,17 @@
                         </div>
                     </div>
 
+                    <!-- Date Movement Control -->
+                    <div class="ctrl-group">
+                        <div class="ctrl-label">日付移動 / Date</div>
+                        <div class="ctrl-row">
+                            <button class="ctrl-btn" onclick="handleV2Control('date', -1)">▲</button>
+                            <span class="ctrl-value" id="current-date-display"
+                                style="font-size: 0.9rem; font-weight: bold;">-</span>
+                            <button class="ctrl-btn" onclick="handleV2Control('date', 1)">▼</button>
+                        </div>
+                    </div>
+
                     <!-- Room Control -->
                     <div class="ctrl-group">
                         <div class="ctrl-label">部屋移動 / Room</div>
@@ -4991,6 +5002,14 @@
                 roomDisplay.innerText = r.room;
             }
 
+            // Update current date display
+            const dateDisplay = document.getElementById('current-date-display');
+            if (dateDisplay) {
+                const checkInDate = new Date(r.checkIn);
+                const dateStr = `${checkInDate.getMonth() + 1}/${checkInDate.getDate()} ${r.checkInTime || 'AM'}`;
+                dateDisplay.innerText = dateStr;
+            }
+
             document.getElementById('v2-panel').classList.add('active');
         }
 
@@ -5103,6 +5122,13 @@
                 // Apply shift to both start and end dates
                 shiftSlot(start, dir);
                 shiftSlot(end, dir);
+
+                // Update date display
+                const dateDisplay = document.getElementById('current-date-display');
+                if (dateDisplay) {
+                    const dateStr = `${start.getMonth() + 1}/${start.getDate()} ${start.getHours() < 12 ? 'AM' : 'PM'}`;
+                    dateDisplay.innerText = dateStr;
+                }
 
             } else if (type === 'duration') {
                 // delta は half-day slots (1 = +半日, -1 = -半日)
