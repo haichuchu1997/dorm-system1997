@@ -2759,8 +2759,29 @@
             renderMobileMatrix();
         }
 
+        // Auth State
+        let isMobileAdminAuthenticated = false;
+
         function switchMobileTab(tab) {
             const tabs = document.querySelectorAll('.mobile-nav-tab');
+
+            // Handle Auth for Edit Tab
+            if (tab === 'edit' && !isMobileAdminAuthenticated) {
+                const password = prompt('管理者パスワードを入力してください:');
+                if (password === '0220') {
+                    isMobileAdminAuthenticated = true;
+                    // Success: Proceed below
+                } else {
+                    alert('パスワードが違います。アクセスできません。');
+                    // Revert to Matrix View or just stop
+                    // If we were on another tab, stay there.
+                    // If this is initial load, validation needed.
+                    // For now, simple return to stop switching.
+                    // Also visual feedback: deselect edit tab if clicked
+                    return;
+                }
+            }
+
             tabs.forEach(t => t.classList.remove('active'));
 
             document.getElementById('mobile-form-view').classList.add('hidden');
