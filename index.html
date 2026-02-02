@@ -1964,14 +1964,14 @@
                     <div class="ctrl-group">
                         <div class="ctrl-label">DATE / 時間移動</div>
                         <div class="ctrl-row">
-                            <button class="ctrl-btn" onclick="handleV2Control('date', -0.5)">▲</button>
+                            <button class="ctrl-btn" onclick="handleV2Control('date', -1)">▲ 上へ</button>
                             <span class="ctrl-value">MOVE</span>
-                            <button class="ctrl-btn" onclick="handleV2Control('date', 0.5)">▼</button>
+                            <button class="ctrl-btn" onclick="handleV2Control('date', 1)">▼ 下へ</button>
                         </div>
                         <div class="ctrl-row">
-                            <button class="ctrl-btn" onclick="handleV2Control('duration', -1)">-1</button>
-                            <span class="ctrl-value">NIGHTS</span>
-                            <button class="ctrl-btn" onclick="handleV2Control('duration', 1)">+1</button>
+                            <button class="ctrl-btn" onclick="handleV2Control('duration', -1)">-半日</button>
+                            <span class="ctrl-value">延長</span>
+                            <button class="ctrl-btn" onclick="handleV2Control('duration', 1)">+半日</button>
                         </div>
                     </div>
 
@@ -2275,8 +2275,8 @@
             <div class="menu-row">
                 <span style="font-weight: 600; color: var(--text-main);">🗓️ 期間延長</span>
                 <div class="extend-controls">
-                    <button class="circle-btn" id="menu-reduce" title="1日短縮">−</button>
-                    <button class="circle-btn" id="menu-extend" title="1日延長">+</button>
+                    <button class="circle-btn" id="menu-reduce" title="半日短縮">−</button>
+                    <button class="circle-btn" id="menu-extend" title="半日延長">+</button>
                 </div>
             </div>
             <!-- 編集メニューアイテム -->
@@ -4961,7 +4961,20 @@
 
             // Update State
             const start = new Date(r.checkIn);
+            // Set proper start time based on checkInTime
+            if (r.checkInTime === 'AM') {
+                start.setHours(10, 0, 0, 0);
+            } else {
+                start.setHours(15, 0, 0, 0);
+            }
+
             const end = new Date(r.checkOut);
+            // Set proper end time based on checkOutTime (if exists), otherwise default to AM
+            if (r.checkOutTime === 'PM') {
+                end.setHours(15, 0, 0, 0);
+            } else {
+                end.setHours(10, 0, 0, 0);
+            }
 
             if (type === 'date') {
                 // Helper to shift 1 slot (AM/PM)
@@ -5003,11 +5016,34 @@
                 shiftSlot(end, dir);
 
             } else if (type === 'duration') {
-                // delta is days (1)
-                // Keep AM/PM status of End date? Usually duration adds 24h
-                end.setDate(end.getDate() + delta);
-                // Min check
-                if (end <= start) end.setDate(start.getDate() + 1); // Simple bounce
+                // delta は half-day slots (1 = +半日, -1 = -半日)
+                // endの時刻に基づいてスロット操作
+                if (delta > 0) { // +半日延長
+                    if (end.getHours() < 12) { // Currently AM, extend to PM same day
+                        end.setHours(15, 0, 0, 0);
+                    } else { // Currently PM, extend to AM next day
+                        end.setDate(end.getDate() + 1);
+                        end.setHours(10, 0, 0, 0);
+                    }
+                } else { // -半日短縮
+                    if (end.getHours() >= 12) { // Currently PM, reduce to AM same day
+                        end.setHours(10, 0, 0, 0);
+                    } else { // Currently AM, reduce to PM previous day
+                        end.setDate(end.getDate() - 1);
+                        end.setHours(15, 0, 0, 0);
+                    }
+                }
+                // Min check: 最低1スロット（半日）は確保
+                if (end <= start) {
+                    // 開始時刻から最低1スロット分の終了時刻を設定
+                    end.setTime(start.getTime());
+                    if (start.getHours() < 12) {
+                        end.setHours(15, 0, 0, 0);
+                    } else {
+                        end.setDate(end.getDate() + 1);
+                        end.setHours(10, 0, 0, 0);
+                    }
+                }
             } else if (type === 'room') {
                 const rooms = ['P209', 'P306', 'P307', 'P507', 'FG406', 'Hotel 1', 'Hotel 2', 'Hotel 3', 'Hotel 4'];
                 let idx = rooms.indexOf(r.room);
@@ -5032,11 +5068,15 @@
             const endD = String(end.getDate()).padStart(2, '0');
             r.checkOut = `${endY}-${endM}-${endD}`;
 
-            // Update checkInTime based on new start time
+            // Update checkInTime and checkOutTime based on new times
             r.checkInTime = start.getHours() < 12 ? 'AM' : 'PM';
+            r.checkOutTime = end.getHours() < 12 ? 'AM' : 'PM';
 
-            // Recalculate slots using unified function
-            r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
+            // Recalculate slots: スロット数を計算（半日単位）
+            // AM to AM = 2 slots (1日), AM to PM = 1 slot (半日), PM to AM next day = 1 slot, PM to PM = 2 slots
+            const msPerDay = 1000 * 60 * 60 * 24;
+            const dayDiff = (end - start) / msPerDay;
+            r.slots = Math.ceil(dayDiff * 2); // 日数差を2倍してスロット数に変換
 
             // DB Update with await for proper synchronization
             if (db) {
@@ -5046,6 +5086,7 @@
                     room: r.room,
                     status: r.status,
                     checkInTime: r.checkInTime,
+                    checkOutTime: r.checkOutTime,
                     locked: r.locked || false,
                     slots: r.slots
                 });
