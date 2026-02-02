@@ -2034,14 +2034,15 @@
 
                     <!-- Room Control -->
                     <div class="ctrl-group">
-                        <div class="ctrl-label">ROOM / 部屋移動</div>
+                        <div class="ctrl-label">部屋移動 / Room</div>
                         <div class="ctrl-row">
                             <button class="ctrl-btn" onclick="handleV2Control('room', -1)">◀</button>
-                            <span class="ctrl-value">ROOM</span>
+                            <span class="ctrl-value" id="current-room-display"
+                                style="font-size: 1.1rem; font-weight: bold;">-</span>
                             <button class="ctrl-btn" onclick="handleV2Control('room', 1)">▶</button>
                         </div>
-                        <div class="ctrl-label" style="margin-top:5px; color:var(--mobile-accent);">STATUS: <span
-                                id="p-status">OK</span></div>
+                        <div class="ctrl-label" style="margin-top:5px; color:var(--mobile-accent); font-size: 0.8rem;">
+                            STATUS: <span id="p-status">OK</span></div>
                     </div>
                 </div>
 
@@ -4984,6 +4985,12 @@
                 lockBtn.innerText = '🔓';
             }
 
+            // Update current room display
+            const roomDisplay = document.getElementById('current-room-display');
+            if (roomDisplay) {
+                roomDisplay.innerText = r.room;
+            }
+
             document.getElementById('v2-panel').classList.add('active');
         }
 
@@ -5137,6 +5144,12 @@
                 // Auto status update
                 if (r.room.includes('Hotel')) r.status = 'hotel';
                 else r.status = 'dorm';
+
+                // Update room display
+                const roomDisplay = document.getElementById('current-room-display');
+                if (roomDisplay) {
+                    roomDisplay.innerText = r.room;
+                }
             }
 
             // Sync dates back (use YYYY-MM-DD format, same as PC version)
