@@ -1885,6 +1885,9 @@
                     <select id="m-color" required>
                         <option value="default">固定 (シアン)</option>
                         <option value="yellow">移動可 (イエロー)</option>
+                        <option value="purple">空室待ち (パープル)</option>
+                        <option value="cleaning">清掃 (レッド)</option>
+                        <option value="cleaning-done">完了 (グリーン)</option>
                     </select>
                 </div>
 
@@ -3814,14 +3817,39 @@
                 });
             });
 
-            // === ブロックを描画（重複対応） ===
+            // === ブロックを描画（スマート配置） ===
+            // 1. 上から順に描画するためにソート
+            blockInfos.sort((a, b) => a.topPx - b.topPx);
+
+            // 2. 各列（部屋）ごとのレーン管理
+            const laneEnds = {};
+
             blockInfos.forEach(info => {
                 const { resident: r, colIndex, topPx, heightPx } = info;
 
-                // この部屋の何番目のブロックかを判定
-                if (!offsetCounters[colIndex]) offsetCounters[colIndex] = 0;
-                const overlapIndex = offsetCounters[colIndex];
-                offsetCounters[colIndex]++;
+                // レーン情報の初期化
+                if (!laneEnds[colIndex]) laneEnds[colIndex] = [];
+
+                // 配置可能なレーンを探す（左から順に、重ならない場所を探す）
+                let assignedLane = -1;
+                for (let i = 0; i < laneEnds[colIndex].length; i++) {
+                    // gapを少し持たせる
+                    if (laneEnds[colIndex][i] <= topPx + 5) {
+                        assignedLane = i;
+                        break;
+                    }
+                }
+
+                // 空きレーンがなければ新しいレーンを追加
+                if (assignedLane === -1) {
+                    assignedLane = laneEnds[colIndex].length;
+                    laneEnds[colIndex].push(0);
+                }
+
+                // このレーンの終了位置を更新
+                laneEnds[colIndex][assignedLane] = topPx + heightPx;
+
+                const overlapIndex = assignedLane;
 
                 // 横方向のオフセットを適用
                 const OVERLAP_OFFSET = 35; // 横に35pxずらす
