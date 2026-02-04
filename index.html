@@ -2510,6 +2510,19 @@
             }
         }
 
+        // データ正規化関数：清掃関連と通常予約のslotsを強制的に1に設定
+        function normalizeResidentData(residents) {
+            return residents.map(r => {
+                // 清掃関連と通常予約は常に1マス
+                if (r.type === 'cleaning' || r.type === 'cleaning-done') {
+                    r.slots = 1;
+                } else if (r.status === 'hotel' || r.type === 'hotel') {
+                    r.slots = 1;
+                }
+                return r;
+            });
+        }
+
         // Real-time Listeners
         let renderDebounceTimer = null;
 
@@ -2534,7 +2547,10 @@
             db.collection('residents').orderBy('checkIn', 'desc').onSnapshot((snapshot) => {
                 // Fix: Spread data FIRST, then overwrite id with doc.id to ensure we use the real Firestore ID
                 // This prevents duplicating documents if the data contains a stale/wrong 'id' field.
-                localData.residents = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                let residents = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+
+                // 正規化：清掃関連と通常予約のslotsを強制的に1に設定
+                localData.residents = normalizeResidentData(residents);
                 console.log('Residents updated in real-time:', localData.residents.length);
 
                 if (renderDebounceTimer) clearTimeout(renderDebounceTimer);
@@ -2581,7 +2597,9 @@
                 const savedSettings = localStorage.getItem('dormSettings');
 
                 if (savedResidents) {
-                    localData.residents = JSON.parse(savedResidents);
+                    let residents = JSON.parse(savedResidents);
+                    // 正規化：清掃関連と通常予約のslotsを強制的に1に設定
+                    localData.residents = normalizeResidentData(residents);
                     console.log('✅ Loaded residents from localStorage:', localData.residents.length, 'records');
                 } else {
                     console.log('ℹ️ No saved residents data found');
@@ -3552,7 +3570,8 @@
                 if (settingsDoc.exists) localData.settings = settingsDoc.data();
 
                 const snap = await db.collection('residents').orderBy('checkIn', 'desc').get();
-                localData.residents = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                let residents = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                localData.residents = normalizeResidentData(residents);
             }
             // Update UI
             updateDashboard();
