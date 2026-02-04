@@ -4199,7 +4199,14 @@
             updateFinancials(r);
 
             // Recalculate slots using unified function
-            r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
+            // 清掃関連と通常予約は常に1マスで表示（既存値を無視）
+            if (r.type === 'cleaning' || r.type === 'cleaning-done') {
+                r.slots = 1; // 清掃待ち・清掃完了は常に1マス
+            } else if (r.status === 'hotel' || r.type === 'hotel') {
+                r.slots = 1; // 通常予約も常に1マス
+            } else {
+                r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
+            }
 
             console.log(`Moved ${r.name} to ${r.room}, ${r.checkIn} ${r.checkInTime}, slots: ${r.slots}`);
 
@@ -5046,7 +5053,12 @@
                 if (!gridCol) return; // Unknown room
 
                 // Duration (Slots) - Use unified calculation function
-                if (!r.slots) {
+                // 清掃関連と通常予約は常に1マスで表示（既存値を無視）
+                if (r.type === 'cleaning' || r.type === 'cleaning-done') {
+                    r.slots = 1; // 清掃待ち・清掃完了は常に1マス
+                } else if (r.status === 'hotel' || r.type === 'hotel') {
+                    r.slots = 1; // 通常予約も常に1マス
+                } else if (!r.slots) {
                     r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
                 }
                 let totalSlots = r.slots;
@@ -5314,17 +5326,18 @@
             r.checkOutTime = end.getHours() < 12 ? 'AM' : 'PM';
 
             // Calculate slots and update financials
-            r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
+            // 清掃関連と通常予約は常に1マスで表示（既存値を無視）
+            if (r.type === 'cleaning' || r.type === 'cleaning-done') {
+                r.slots = 1; // 清掃待ち・清掃完了は常に1マス
+            } else if (r.status === 'hotel' || r.type === 'hotel') {
+                r.slots = 1; // 通常予約も常に1マス
+            } else {
+                r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
+            }
             updateFinancials(r);
 
             // Update Dashboard and other views
             refreshData();
-
-            // Recalculate slots: スロット数を計算（半日単位）
-            // AM to AM = 2 slots (1日), AM to PM = 1 slot (半日), PM to AM next day = 1 slot, PM to PM = 2 slots
-            const msPerDay = 1000 * 60 * 60 * 24;
-            const dayDiff = (end - start) / msPerDay;
-            r.slots = Math.ceil(dayDiff * 2); // 日数差を2倍してスロット数に変換
 
             // DB Update with await for proper synchronization
             if (db) {
