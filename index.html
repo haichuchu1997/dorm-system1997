@@ -2984,7 +2984,16 @@
                 const isPM = r.checkInTime === 'PM' || (!r.checkInTime);
                 const topPx = (offsetDays * DAY_HEIGHT) + HEADER_HEIGHT + (isPM ? ROW_HEIGHT : 0);
 
-                if (!r.slots) r.slots = (r.nights || 1) * 2;
+                // 清掃完了と通常予約は常に1マスで表示
+                if (!r.slots) {
+                    if (r.type === 'cleaning-done') {
+                        r.slots = 1; // 清掃完了は常に1マス
+                    } else if (r.status === 'hotel' || r.type === 'hotel') {
+                        r.slots = 1; // 通常予約も常に1マス
+                    } else {
+                        r.slots = (r.nights || 1) * 2; // その他は従来通り
+                    }
+                }
                 const heightPx = (r.slots * ROW_HEIGHT);
 
                 // Store block info
@@ -3881,8 +3890,15 @@
                 // Calculate height based on slots (1 slot = 30px)
                 // Use unified slot calculation function
                 if (!r.checkInTime) r.checkInTime = 'PM'; // Ensure checkInTime is set
+                // 清掃完了と通常予約は常に1マスで表示
                 if (!r.slots) {
-                    r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
+                    if (r.type === 'cleaning-done') {
+                        r.slots = 1; // 清掃完了は常に1マス
+                    } else if (r.status === 'hotel' || r.type === 'hotel') {
+                        r.slots = 1; // 通常予約も常に1マス
+                    } else {
+                        r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
+                    }
                 }
                 const heightPx = (r.slots * ROW_HEIGHT);
 
