@@ -4404,7 +4404,22 @@
                 return;
             }
 
-            if (!r.slots) r.slots = r.nights * 2;
+            // 清掃関連と通常予約は延長不可
+            if (r.type === 'cleaning' || r.type === 'cleaning-done') {
+                alert('清掃枠は延長できません');
+                hideContextMenu();
+                return;
+            }
+            if (r.status === 'hotel' || r.type === 'hotel') {
+                alert('通常予約枠は延長できません');
+                hideContextMenu();
+                return;
+            }
+
+            // slots初期化（清掃関連・通常予約以外）
+            if (!r.slots) {
+                r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
+            }
             const newSlots = Math.max(1, r.slots + delta);
             if (newSlots === r.slots) return;
 
