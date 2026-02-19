@@ -687,6 +687,22 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            background: linear-gradient(90deg, #fff, #00f0ff, #fff, #7000ff, #fff);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: sidebarLogoShimmer 6s linear infinite;
+        }
+
+        @keyframes sidebarLogoShimmer {
+            0% {
+                background-position: 0% center;
+            }
+
+            100% {
+                background-position: 300% center;
+            }
         }
 
         .sidebar-logo::before {
@@ -696,6 +712,22 @@
             background: var(--primary);
             border-radius: 50%;
             box-shadow: 0 0 10px var(--primary);
+            animation: logoDotPulse 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes logoDotPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 10px var(--primary);
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow: 0 0 20px var(--primary), 0 0 40px rgba(0, 240, 255, 0.3);
+                transform: scale(1.2);
+            }
         }
 
         .nav-link {
@@ -705,10 +737,27 @@
             color: var(--text-muted);
             font-weight: 500;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.3s var(--ease-out);
             display: flex;
             align-items: center;
             gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.05), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .nav-link:hover::after {
+            left: 100%;
         }
 
         .nav-link:hover,
@@ -717,9 +766,14 @@
             color: var(--text-main);
         }
 
+        .nav-link:hover {
+            transform: translateX(4px);
+        }
+
         .nav-link.active {
             border-left: 3px solid var(--primary);
             background: linear-gradient(90deg, rgba(0, 240, 255, 0.1) 0%, transparent 100%);
+            box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.05);
         }
 
         /* Main Content */
@@ -750,8 +804,21 @@
             color: var(--primary);
             font-weight: 700;
             text-align: right;
-            /* Added for right alignment */
             margin-bottom: 24px;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+            animation: clockGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes clockGlow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+            }
+
+            50% {
+                text-shadow: 0 0 20px rgba(0, 240, 255, 0.5), 0 0 40px rgba(0, 240, 255, 0.2);
+            }
         }
 
         /* Matrix Scrolling & Sticky Headers */
@@ -850,6 +917,31 @@
             overflow: hidden;
             transition: all 0.4s var(--ease-out);
             box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            animation: kpiSlideIn 0.6s var(--ease-out) both;
+        }
+
+        .kpi-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .kpi-card:nth-child(2) {
+            animation-delay: 0.25s;
+        }
+
+        .kpi-card:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes kpiSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .kpi-card::before {
@@ -863,10 +955,27 @@
             pointer-events: none;
         }
 
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.06) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .kpi-card:hover::after {
+            opacity: 1;
+        }
+
         .kpi-card:hover {
             transform: translateY(-6px);
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+            border-color: rgba(0, 240, 255, 0.2);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 240, 255, 0.05);
         }
 
         .kpi-label {
@@ -883,6 +992,12 @@
             font-weight: 800;
             line-height: 1;
             letter-spacing: -1px;
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover .kpi-value {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 8px currentColor);
         }
 
         .kpi-sub {
@@ -894,13 +1009,24 @@
             gap: 6px;
         }
 
-        /* Table */
         .table-panel {
             background: var(--bg-panel);
             border-radius: 16px;
             border: var(--border-light);
             overflow: visible;
-            /* Changed from clip to visible to allow inner scrollbars to be seen correctly */
+            animation: tableFadeIn 0.8s var(--ease-out) 0.4s both;
+        }
+
+        @keyframes tableFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .table-header {
@@ -962,7 +1088,8 @@
         }
 
         tr:hover {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(0, 240, 255, 0.03);
+            transition: background 0.3s ease;
         }
 
         .status-badge {
@@ -977,6 +1104,19 @@
             background: rgba(0, 240, 255, 0.15);
             color: var(--primary);
             border: 1px solid rgba(0, 240, 255, 0.3);
+            animation: badgePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 transparent;
+            }
+
+            50% {
+                box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+            }
         }
 
         .status-hotel {
@@ -1835,10 +1975,259 @@
             gap: 10px;
             padding-top: 10px;
         }
+
+        /* === DCP Group Splash Screen === */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 99999;
+            background: radial-gradient(ellipse at center, #0a0e17 0%, #000000 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        #splash-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Golden Radial Glow */
+        .splash-glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 200, 50, 0.15) 0%, rgba(255, 170, 0, 0.05) 40%, transparent 70%);
+            animation: splashPulse 2s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes splashPulse {
+
+            0%,
+            100% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        /* Aura Ring */
+        .splash-aura {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 200, 50, 0.2);
+            animation: auraRing 2.5s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes auraRing {
+
+            0%,
+            100% {
+                transform: scale(0.9);
+                opacity: 0.3;
+                border-color: rgba(255, 200, 50, 0.2);
+            }
+
+            50% {
+                transform: scale(1.4);
+                opacity: 0.7;
+                border-color: rgba(0, 240, 255, 0.3);
+            }
+        }
+
+        /* Main Title */
+        .splash-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #c8a44e, #ffd700, #fff8dc, #ffd700, #c8a44e);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: splashShimmer 3s linear infinite, splashFadeIn 1s ease-out;
+            filter: drop-shadow(0 0 20px rgba(255, 200, 50, 0.4));
+            z-index: 2;
+            position: relative;
+        }
+
+        @keyframes splashShimmer {
+            0% {
+                background-position: -200% center;
+            }
+
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        @keyframes splashFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.9);
+                letter-spacing: 30px;
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                letter-spacing: 8px;
+            }
+        }
+
+        /* Subtitle */
+        .splash-subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: rgba(0, 240, 255, 0.7);
+            margin-top: 16px;
+            animation: splashSubIn 1s ease-out 0.5s both;
+            z-index: 2;
+            position: relative;
+        }
+
+        @keyframes splashSubIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+                letter-spacing: 20px;
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+                letter-spacing: 6px;
+            }
+        }
+
+        /* Line Accent */
+        .splash-line {
+            width: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #ffd700, #00f0ff, #ffd700, transparent);
+            margin-top: 20px;
+            animation: splashLine 1.2s ease-out 0.3s forwards;
+            z-index: 2;
+            position: relative;
+        }
+
+        @keyframes splashLine {
+            0% {
+                width: 0;
+                opacity: 0;
+            }
+
+            100% {
+                width: 200px;
+                opacity: 1;
+            }
+        }
+
+        /* Sparkle Stars */
+        .splash-star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 6px 2px rgba(255, 215, 0, 0.6);
+            animation: starTwinkle 1.5s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes starTwinkle {
+
+            0%,
+            100% {
+                opacity: 0;
+                transform: scale(0);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Floating Particles */
+        .splash-particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(0, 240, 255, 0.6);
+            border-radius: 50%;
+            animation: particleFloat 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px) translateX(30px);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- DCP Group Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-glow"></div>
+        <div class="splash-aura"></div>
+        <!-- Stars -->
+        <div class="splash-star" style="top:15%;left:20%;animation-delay:0s;"></div>
+        <div class="splash-star" style="top:25%;left:75%;animation-delay:0.3s;"></div>
+        <div class="splash-star" style="top:60%;left:15%;animation-delay:0.6s;"></div>
+        <div class="splash-star" style="top:70%;left:80%;animation-delay:0.9s;"></div>
+        <div class="splash-star" style="top:40%;left:90%;animation-delay:1.2s;"></div>
+        <div class="splash-star" style="top:80%;left:45%;animation-delay:0.4s;"></div>
+        <div class="splash-star" style="top:10%;left:55%;animation-delay:0.8s;"></div>
+        <div class="splash-star" style="top:50%;left:30%;animation-delay:1.0s;"></div>
+        <!-- Particles -->
+        <div class="splash-particle" style="bottom:20%;left:30%;animation-delay:0s;"></div>
+        <div class="splash-particle" style="bottom:30%;left:50%;animation-delay:0.5s;"></div>
+        <div class="splash-particle" style="bottom:25%;left:70%;animation-delay:1s;"></div>
+        <div class="splash-particle" style="bottom:15%;left:40%;animation-delay:1.5s;"></div>
+        <div class="splash-particle" style="bottom:35%;left:60%;animation-delay:0.8s;"></div>
+        <div class="splash-particle" style="bottom:10%;left:25%;animation-delay:2s;"></div>
+        <!-- Text -->
+        <div class="splash-title">DCP Group</div>
+        <div class="splash-line"></div>
+        <div class="splash-subtitle">Dormitory Management System</div>
+    </div>
 
     <!-- ==============================================
          UI: MOBILE / EXTERNAL INPUT
@@ -1864,6 +2253,27 @@
                 <div class="input-group">
                     <label>氏名 / Full Name</label>
                     <input type="text" id="m-name" placeholder="山田 太郎" required autocomplete="name">
+                </div>
+
+                <!-- 二名入室トグル -->
+                <div style="margin-bottom:20px; display:flex; align-items:center; gap:12px;">
+                    <button type="button" id="m-double-toggle" class="btn"
+                        style="padding:12px 20px; font-size:0.9rem; background:#333; border:1px solid #555; transition:all 0.3s;"
+                        onclick="toggleMobileDouble()">
+                        👥 二名入室
+                    </button>
+                    <span id="m-double-label" style="font-size:0.85rem; color:var(--text-muted);">
+                        OFF - 1名で登録
+                    </span>
+                </div>
+                <!-- 2人目の名前 -->
+                <div id="m-name2-group" class="input-group" style="display:none;">
+                    <label>2人目の氏名 / Name 2</label>
+                    <input type="text" id="m-name2" placeholder="佐藤 花子" autocomplete="name">
+                    <div
+                        style="margin-top:8px; padding:10px; background:rgba(0,240,255,0.08); border-radius:10px; border:1px solid rgba(0,240,255,0.2);">
+                        <span style="font-size:0.85rem; color:#00f0ff;">💰 二名入室：一人当たり ¥2,000/泊</span>
+                    </div>
                 </div>
 
                 <div class="input-group">
@@ -2224,6 +2634,27 @@
                         <input type="text" id="nb-name"
                             style="width:100%; padding:8px; border-radius:4px; border:1px solid #444; background:#222; color:#fff;">
                     </div>
+                    <!-- 二名入室トグル -->
+                    <div style="margin-top:12px; display:flex; align-items:center; gap:12px;">
+                        <button id="nb-double-toggle" class="btn"
+                            style="padding:6px 16px; font-size:0.85rem; background:#333; border:1px solid #555; transition:all 0.3s;"
+                            onclick="toggleDoubleOccupancy()">
+                            👥 二名入室
+                        </button>
+                        <span id="nb-double-label" style="font-size:0.8rem; color:var(--text-muted);">
+                            OFF - 1名で登録
+                        </span>
+                    </div>
+                    <!-- 2人目の名前（二名入室時のみ表示） -->
+                    <div id="nb-name2-group" class="form-group" style="margin-top:12px; display:none;">
+                        <label>2人目の名前 / Name 2</label>
+                        <input type="text" id="nb-name2"
+                            style="width:100%; padding:8px; border-radius:4px; border:1px solid #444; background:#222; color:#fff;">
+                        <div
+                            style="margin-top:6px; padding:8px; background:rgba(0,240,255,0.08); border-radius:6px; border:1px solid rgba(0,240,255,0.2);">
+                            <span style="font-size:0.8rem; color:#00f0ff;">💰 二名入室：一人当たり ¥2,000/泊</span>
+                        </div>
+                    </div>
                     <div class="form-group" style="margin-top:12px;">
                         <label>入寮日 / Check In</label>
                         <input type="date" id="nb-in"
@@ -2464,7 +2895,7 @@
         // --- System State ---
         let db = null;
         let localData = {
-            settings: { pricePerNight: 2500, totalRooms: 5 },
+            settings: { pricePerNight: 2000, totalRooms: 5 },
             residents: [],
             filter: 'all' // all, dorm, hotel
         };
@@ -2515,8 +2946,6 @@
             return residents.map(r => {
                 // 清掃関連と通常予約は常に1マス
                 if (r.type === 'cleaning' || r.type === 'cleaning-done') {
-                    r.slots = 1;
-                } else if (r.status === 'hotel' || r.type === 'hotel') {
                     r.slots = 1;
                 }
                 return r;
@@ -2714,9 +3143,19 @@
         }
 
         function updateFinancials(r) {
-            const financials = calcStay(r.checkIn, r.checkOut, localData.settings.pricePerNight);
+            const price = r.priceOverride || localData.settings.pricePerNight;
+            const occupants = r.doubleOccupancy ? 2 : 1;
+            const financials = calcStay(r.checkIn, r.checkOut, price * occupants);
             r.nights = financials.nights;
             r.totalCost = financials.total;
+        }
+
+        // 表示用の名前を取得（二名入室対応）
+        function getDisplayName(r) {
+            if (r.doubleOccupancy && r.name2) {
+                return r.name + ' / ' + r.name2;
+            }
+            return r.name;
         }
 
         // Check Availability
@@ -3000,11 +3439,9 @@
                 const isPM = r.checkInTime === 'PM' || (!r.checkInTime);
                 const topPx = (offsetDays * DAY_HEIGHT) + HEADER_HEIGHT + (isPM ? ROW_HEIGHT : 0);
 
-                // 清掃関連と通常予約は常に1マスで表示（既存値を無視）
+                // 清掃関連は常に1マスで表示（既存値を無視）
                 if (r.type === 'cleaning' || r.type === 'cleaning-done') {
                     r.slots = 1; // 清掃待ち・清掃完了は常に1マス
-                } else if (r.status === 'hotel' || r.type === 'hotel') {
-                    r.slots = 1; // 通常予約も常に1マス
                 } else if (!r.slots) {
                     r.slots = (r.nights || 1) * 2; // その他は従来通り
                 }
@@ -3073,7 +3510,7 @@
                     div.style.zIndex = 100; // 基本z-index（PMマスより前面）
                 }
 
-                div.innerHTML = `<div style="pointer-events:none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: ${ROW_HEIGHT}px;">${r.locked ? '🔒 ' : ''}${r.name}</div>`;
+                div.innerHTML = `<div style="pointer-events:none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: ${ROW_HEIGHT}px;">${r.locked ? '🔒 ' : ''}${getDisplayName(r)}</div>`;
                 div.style.fontSize = '0.9rem'; // Readable size
                 div.style.padding = '0 6px';
                 div.style.display = 'flex';
@@ -3304,6 +3741,16 @@
             document.getElementById('m-submit-btn').innerText = "申請を確定する";
             document.getElementById('m-cancel-edit-btn').classList.add('hidden');
 
+            // 二名入室をリセット
+            mDoubleOccupancy = false;
+            document.getElementById('m-name2-group').style.display = 'none';
+            document.getElementById('m-name2').value = '';
+            const toggleBtn = document.getElementById('m-double-toggle');
+            toggleBtn.style.background = '#333';
+            toggleBtn.style.borderColor = '#555';
+            toggleBtn.style.boxShadow = 'none';
+            document.getElementById('m-double-label').innerHTML = 'OFF - 1名で登録';
+
             // Set default date again
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('m-checkin').value = today;
@@ -3439,6 +3886,30 @@
             document.getElementById('m-name').focus();
         }
 
+        // モバイル版 二名入室トグル
+        let mDoubleOccupancy = false;
+        function toggleMobileDouble() {
+            mDoubleOccupancy = !mDoubleOccupancy;
+            const group = document.getElementById('m-name2-group');
+            const toggleBtn = document.getElementById('m-double-toggle');
+            const label = document.getElementById('m-double-label');
+            if (mDoubleOccupancy) {
+                group.style.display = 'block';
+                toggleBtn.style.background = 'rgba(0,240,255,0.15)';
+                toggleBtn.style.borderColor = 'var(--primary)';
+                toggleBtn.style.boxShadow = '0 0 15px rgba(0,240,255,0.2)';
+                label.innerHTML = '<span style="color:var(--primary); font-weight:700;">ON</span> - 2名で登録';
+                document.getElementById('m-name2').focus();
+            } else {
+                group.style.display = 'none';
+                toggleBtn.style.background = '#333';
+                toggleBtn.style.borderColor = '#555';
+                toggleBtn.style.boxShadow = 'none';
+                label.innerHTML = 'OFF - 1名で登録';
+                document.getElementById('m-name2').value = '';
+            }
+        }
+
         async function submitEntry(e) {
             e.preventDefault();
             const btn = document.getElementById('m-submit-btn');
@@ -3483,6 +3954,21 @@
                 checkInTime: checkInTime,
                 slots: slots
             };
+
+            // 二名入室の処理
+            if (mDoubleOccupancy) {
+                const name2 = document.getElementById('m-name2').value;
+                if (!name2) {
+                    await showAlert('2人目の名前を入力してください');
+                    btn.innerHTML = '申請を確定する';
+                    btn.disabled = false;
+                    return;
+                }
+                finalRecord.doubleOccupancy = true;
+                finalRecord.name2 = name2;
+                finalRecord.priceOverride = 2000;
+            }
+            updateFinancials(finalRecord);
 
             // 3. Save (Create or Update)
             if (db) {
@@ -3535,7 +4021,7 @@
             // 宿泊数と寮費合計を表示
             nightsEl.innerText = `${record.nights}泊`;
             totalCostEl.innerText = `¥${record.totalCost.toLocaleString()}`;
-
+            title.innerText = getDisplayName(record);
             if (status === 'dorm') {
                 statusText.innerText = "寮 (DORM)";
                 statusText.style.color = "var(--primary)";
@@ -3715,7 +4201,7 @@
 
                 row.innerHTML = `
                     <td><span class="status-badge ${r.status === 'dorm' ? 'status-dorm' : 'status-hotel'}">${r.status}</span></td>
-                    <td class="font-bold">${r.name}</td>
+                    <td class="font-bold">${getDisplayName(r)}</td>
                     <td style="text-align:center;">${nights}泊</td>
                     <td style="text-align:right; font-weight:600;">¥${formattedCost}</td>
                     <td>${r.checkIn}</td>
@@ -3907,11 +4393,9 @@
                 // Calculate height based on slots (1 slot = 30px)
                 // Use unified slot calculation function
                 if (!r.checkInTime) r.checkInTime = 'PM'; // Ensure checkInTime is set
-                // 清掃関連と通常予約は常に1マスで表示（既存値を無視）
+                // 清掃関連は常に1マスで表示（既存値を無視）
                 if (r.type === 'cleaning' || r.type === 'cleaning-done') {
                     r.slots = 1; // 清掃待ち・清掃完了は常に1マス
-                } else if (r.status === 'hotel' || r.type === 'hotel') {
-                    r.slots = 1; // 通常予約も常に1マス
                 } else if (!r.slots) {
                     r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
                 }
@@ -3991,7 +4475,7 @@
                 }
 
                 // Add locked icon if needed
-                div.innerHTML = `<div style="pointer-events:none;">${r.locked ? '🔒 ' : ''}${r.name}</div>`;
+                div.innerHTML = `<div style="pointer-events:none;">${r.locked ? '🔒 ' : ''}${getDisplayName(r)}</div>`;
                 div.style.fontSize = '1rem';
 
                 // Event Listeners
@@ -4216,11 +4700,9 @@
             updateFinancials(r);
 
             // Recalculate slots using unified function
-            // 清掃関連と通常予約は常に1マスで表示（既存値を無視）
+            // 清掃関連は常に1マスで表示（既存値を無視）
             if (r.type === 'cleaning' || r.type === 'cleaning-done') {
                 r.slots = 1; // 清掃待ち・清掃完了は常に1マス
-            } else if (r.status === 'hotel' || r.type === 'hotel') {
-                r.slots = 1; // 通常予約も常に1マス
             } else {
                 r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
             }
@@ -4727,12 +5209,41 @@
         }
 
         // Modal for New Booking
+        let nbDoubleOccupancy = false;
+
+        function toggleDoubleOccupancy() {
+            nbDoubleOccupancy = !nbDoubleOccupancy;
+            const btn = document.getElementById('nb-double-toggle');
+            const label = document.getElementById('nb-double-label');
+            const name2Group = document.getElementById('nb-name2-group');
+
+            if (nbDoubleOccupancy) {
+                btn.style.background = 'rgba(0, 240, 255, 0.15)';
+                btn.style.borderColor = '#00f0ff';
+                btn.style.color = '#00f0ff';
+                label.textContent = 'ON - 2名で登録（¥2,000/人/泊）';
+                label.style.color = '#00f0ff';
+                name2Group.style.display = 'block';
+            } else {
+                btn.style.background = '#333';
+                btn.style.borderColor = '#555';
+                btn.style.color = '';
+                label.textContent = 'OFF - 1名で登録';
+                label.style.color = 'var(--text-muted)';
+                name2Group.style.display = 'none';
+            }
+        }
+
         function openNewBookingModal() {
             // Unset values
             document.getElementById('nb-name').value = '';
+            document.getElementById('nb-name2').value = '';
             document.getElementById('nb-in').value = new Date().toISOString().split('T')[0];
             document.getElementById('nb-out').value = '';
             document.getElementById('nb-color').value = 'default';
+            // 二名入室をリセット
+            nbDoubleOccupancy = true; // toggleで反転するためtrueにセット
+            toggleDoubleOccupancy(); // OFFに切り替え
             document.getElementById('new-booking-modal').classList.add('open');
         }
 
@@ -4742,6 +5253,7 @@
 
         async function submitNewBooking() {
             const name = document.getElementById('nb-name').value;
+            const name2 = document.getElementById('nb-name2').value;
             const checkIn = document.getElementById('nb-in').value;
             const checkOut = document.getElementById('nb-out').value;
             const room = document.getElementById('nb-room').value;
@@ -4749,6 +5261,12 @@
 
             if (!name || !checkIn || !checkOut) {
                 await showAlert("全ての項目を入力してください");
+                return;
+            }
+
+            // 二名入室チェック
+            if (nbDoubleOccupancy && !name2) {
+                await showAlert("2人目の名前を入力してください");
                 return;
             }
 
@@ -4762,7 +5280,9 @@
             }
 
             const isHotel = room.includes('Hotel');
+            const isDouble = nbDoubleOccupancy;
 
+            // 1レコードで登録（二名入室の場合はname2を含む）
             const newResident = {
                 id: 'new_' + Date.now(),
                 name,
@@ -4771,21 +5291,25 @@
                 nights,
                 status: isHotel ? 'hotel' : 'dorm',
                 room,
-                color, // Store chosen color
+                color,
                 createdAt: new Date().toISOString(),
-                checkInTime: 'PM' // Default new bookings to PM
+                checkInTime: 'PM',
+                doubleOccupancy: isDouble
             };
+            if (isDouble) {
+                newResident.name2 = name2;
+                newResident.priceOverride = 2000; // 二名入室は一人2000円
+            }
             updateFinancials(newResident);
 
             if (db) {
-                // Remove ID from data payload
                 const { id, ...resData } = newResident;
                 await db.collection('residents').add(sanitizeData(resData));
-                // Listeners will handle update
             } else {
                 localData.residents.push(newResident);
-                refreshData();
             }
+
+            if (!db) refreshData();
 
             closeNewBookingModal();
         }
@@ -4814,8 +5338,24 @@
                 }
                 setupContextMenuListeners();
                 console.log("===== AutoInit Completed =====");
+
+                // スプラッシュ画面を3秒後にフェードアウト
+                setTimeout(() => {
+                    const splash = document.getElementById('splash-screen');
+                    if (splash) {
+                        splash.classList.add('fade-out');
+                        // フェードアウト完了後にDOMから削除
+                        setTimeout(() => splash.remove(), 800);
+                    }
+                }, 3000);
             } catch (e) {
                 console.error("AutoInit Failed:", e);
+                // エラー時もスプラッシュを消す
+                const splash = document.getElementById('splash-screen');
+                if (splash) {
+                    splash.classList.add('fade-out');
+                    setTimeout(() => splash.remove(), 800);
+                }
             }
         }
 
@@ -5085,11 +5625,9 @@
                 if (!gridCol) return; // Unknown room
 
                 // Duration (Slots) - Use unified calculation function
-                // 清掃関連と通常予約は常に1マスで表示（既存値を無視）
+                // 清掃関連は常に1マスで表示（既存値を無視）
                 if (r.type === 'cleaning' || r.type === 'cleaning-done') {
                     r.slots = 1; // 清掃待ち・清掃完了は常に1マス
-                } else if (r.status === 'hotel' || r.type === 'hotel') {
-                    r.slots = 1; // 通常予約も常に1マス
                 } else if (!r.slots) {
                     r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
                 }
@@ -5104,7 +5642,7 @@
                 const div = document.createElement('div');
                 div.className = `v2-block ${r.status === 'hotel' ? 'status-hotel' : ''} ${r.locked ? 'block-locked' : ''}`;
                 if (r.id === v2SelectedId) div.classList.add('selected');
-                div.innerText = r.name;
+                div.innerText = getDisplayName(r);
 
                 div.style.gridColumn = `${gridCol} / span 1`;
                 div.style.gridRow = `${gridRowStart} / span ${totalSlots}`;
@@ -5140,7 +5678,7 @@
             const r = localData.residents.find(x => x.id === id);
             if (!r) return;
 
-            document.getElementById('p-name').innerText = r.name;
+            document.getElementById('p-name').innerText = getDisplayName(r);
             const start = new Date(r.checkIn);
             const end = new Date(r.checkOut);
 
@@ -5358,11 +5896,9 @@
             r.checkOutTime = end.getHours() < 12 ? 'AM' : 'PM';
 
             // Calculate slots and update financials
-            // 清掃関連と通常予約は常に1マスで表示（既存値を無視）
+            // 清掃関連は常に1マスで表示（既存値を無視）
             if (r.type === 'cleaning' || r.type === 'cleaning-done') {
                 r.slots = 1; // 清掃待ち・清掃完了は常に1マス
-            } else if (r.status === 'hotel' || r.type === 'hotel') {
-                r.slots = 1; // 通常予約も常に1マス
             } else {
                 r.slots = calculateSlots(r.checkIn, r.checkOut, r.checkInTime);
             }
